@@ -1,5 +1,5 @@
 # faust-stratus
-A Faust architecture file targeting the Chaos Stratus pedal
+A Faust architecture file targeting the Chaos Stratus pedal, and tools to help use it
 
 Your most important resources:
 
