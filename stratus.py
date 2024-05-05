@@ -30,7 +30,6 @@ def loadStratus(name):
     stratus.stratusCompute.argtypes = [EffectHandle, c_uint, FloatPointer, FloatPointer]
     return stratus
 
-
 class Stratus:
     def __init__(self,name):
         self.stratus = loadStratus(name)
@@ -44,7 +43,7 @@ class Stratus:
     def getVersion(self):
         return self.stratus.stratusGetVersion(self.effect)
     def getKnobCount(self):
-        return self.stratus.stratusGetKnobCount(self.effect)
+        return self.knobCount
     def setKnob(self,index, value):
         self.stratus.stratusSetKnob(self.effect, index, value)
     def getKnob(self,index):
@@ -64,10 +63,17 @@ class Stratus:
 
 effect = Stratus(argv[1])
 print("Successfully initialized ", effect.getName())
-print(effect.getKnobCount())
-print(effect.getStompSwitch())
-effect.setStompSwitch(0)
-print(effect.getStompSwitch())
-print(effect.getKnob(2))
+knobCount = effect.getKnobCount()
 
+while knobCount > 0:
+    knobCount-=1
+    knobValue = effect.getKnob(knobCount)
+    effect.setKnob(knobCount, knobValue + 0.5)
+    assert effect.getKnob(knobCount) == (knobValue + 0.5)
 
+stompSwitch = effect.getStompSwitch()
+newStompSwitch = 1 if stompSwitch == 0 else 0
+effect.setStompSwitch(newStompSwitch)
+assert effect.getStompSwitch() == newStompSwitch
+
+print("Successfully tested ", effect.getName())

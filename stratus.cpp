@@ -40,7 +40,7 @@ class Meta
 	public:
 		void declare(const char* key, const char* value) {
 			if (strcmp(key,nameKey) == 0) {
-				name = strdup(value);
+				name = value;
 			}
 		}
 	friend class Stratus;
@@ -75,11 +75,11 @@ class UI {
 	    void addButton(const char* label, FAUSTFLOAT* zone) {};
 	    void addCheckButton(const char* label, FAUSTFLOAT* zone) {};
 	    void addVerticalSlider(const char* label, FAUSTFLOAT* zone, FAUSTFLOAT init, FAUSTFLOAT min, FAUSTFLOAT max, FAUSTFLOAT step) {
-			printf("VSLIDER: %s %f %f %f %f %f\n",label,zone,init,min,max,step);
+//			printf("VSLIDER: %s %p %f %f %f %f\n",label,zone,init,min,max,step);
 			this->add_knob(zone);
 		};
 	    void addHorizontalSlider(const char* label, FAUSTFLOAT* zone, FAUSTFLOAT init, FAUSTFLOAT min, FAUSTFLOAT max, FAUSTFLOAT step) {
-			printf("HSLIDER: %s %f %f %f %f %f\n",zone,init,min,max,step);
+//			printf("HSLIDER: %s %p %f %f %f %f\n",label,zone,init,min,max,step);
 			this->add_knob(zone);
 		};
 	    void addNumEntry(const char* label, FAUSTFLOAT* zone, FAUSTFLOAT init, FAUSTFLOAT min, FAUSTFLOAT max, FAUSTFLOAT step) {};
@@ -146,26 +146,26 @@ struct Stratus
 		int fSampleRate = 44100;
 		Stratus()
 		{
-			std::cout << "INITIALIZING" << std::endl;
+//			std::cout << "INITIALIZING" << std::endl;
 			faustUi = new UI;
-			std::cout << "UI created" << std::endl;
+//			std::cout << "UI created" << std::endl;
 			faustMeta = new Meta;
-			std::cout << "Meta created" << std::endl;
+//			std::cout << "Meta created" << std::endl;
 			faust = new FAUSTCLASS();
-			std::cout << "Faust created" << std::endl;
+//			std::cout << "Faust created" << std::endl;
 			faust->metadata(faustMeta);
-			std::cout << "Faust metadata retrieved" << std::endl;
+//			std::cout << "Faust metadata retrieved" << std::endl;
 			faust->init(fSampleRate);
-			std::cout << "Faust initialized" << std::endl;
+//			std::cout << "Faust initialized" << std::endl;
 			faust->buildUserInterface(faustUi);
-			std::cout << "Faust UI interrogated" << std::endl;
+//			std::cout << "Faust UI interrogated" << std::endl;
 
 			name = faustMeta->name;
-			std::cout << "Name retrieved: " << name << std::endl;
+//			std::cout << "Name retrieved: " << name << std::endl;
 			for (int i = 0; i < MAXSWITCHES; ++i)
 				switches[i] = SWITCH_STATE::DOWN;
 			stompSwitch = DOWN;
-			std::cout << "INITIALIZED " << name << std::endl;
+//			std::cout << "INITIALIZED " << name << std::endl;
 		}
 		~Stratus() {}
 

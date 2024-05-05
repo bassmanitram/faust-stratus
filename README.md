@@ -24,6 +24,8 @@ For the moment you have to have the Faust compiler installed locally (but not on
    ```
    faust -a [where you put the architecture file]/stratus.cpp [path to the DSP file] -o [what you want the C++ file to be called]
    ```
+* You can use the [included build script](resources/build-effect.sh) to run the Faust compiler _and_ compile the resulting C++ file 
+  on your local machine, which will then allow you to test it locally using the [python test script](./stratus.py)
 
 * Copy the generated C++ file to the Stratus
 * Compile that as described on the Stratus developers portal
