@@ -31,3 +31,7 @@
 *.out
 *.app
 resources/*.cpp
+build-sdk/stratus.py
+build-sdk/faust2stratus
+build-sdk/faust-stratus.tgz
+build-sdk/stratus.cpp

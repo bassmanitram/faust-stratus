@@ -1,0 +1,65 @@
+#set -euo
+##
+## This script installs the SDK on the stratus, building it locally if that has not been done
+##
+## To build the SDK, you need docker
+##
+## You MUST plug your strarus into your computer via USB for the installation to take place
+##
+INSTALLATION_PACKAGE="faust-stratus.tgz"
+cd $(realpath $(dirname $0))/build-sdk
+if [[ ! -f "${INSTALLATION_PACKAGE}" ]]; then
+  echo "Building the SDK installation package"
+  ./build-sdk.sh
+fi
+
+##
+## Is the Stratus connected
+##
+TARGET_ADDRESS=stratus.local # the first script argument
+ping -c 1 -q $TARGET_ADDRESS >/dev/null 2>&1 || { echo "Cannot find Stratus connection. Please connect Stratus to your computer via USB"; false; }
+##
+## All this is done to ensure that we only ask for the SSH password once
+##
+
+TMP_DIR=$(mktemp -d)
+SSH_CFG=$TMP_DIR/ssh-cfg
+SSH_SOCKET=$TMP_DIR/ssh-socket
+TARGET_USER=root
+TARGET_PATH=/$TARGET_USER/$INSTALLATION_PACKAGE
+
+##
+## Firstly some local cleanup!
+##
+# Graceful Shutdown
+for sig in SIGTERM ERR EXIT; do trap "_term $sig" $sig; done
+_term() {
+  trap "" SIGTERM ERR EXIT
+  # Close the SSH tunnel:
+  ssh -F "$SSH_CFG" -S "$SSH_SOCKET" -O exit "$TARGET_ADDRESS" >/dev/null 2>&1
+  rm -rf $TMP_DIR
+  exit 0
+}
+
+# Create a temporary SSH config file:
+cat > "$SSH_CFG" <<ENDCFG
+Host *
+        ControlMaster auto
+        ControlPath $SSH_SOCKET
+ENDCFG
+
+# Open an SSH tunnel:
+ssh -F "$SSH_CFG" -f -N -l $TARGET_USER $TARGET_ADDRESS
+
+# Upload the installation file:
+scp -F "$SSH_CFG" "${INSTALLATION_PACKAGE}" "$TARGET_USER@$TARGET_ADDRESS:/$TARGET_PATH"
+
+# Install the installation file:
+ssh -F "$SSH_CFG" "$TARGET_USER@$TARGET_ADDRESS:/$TARGET_USER" -T <<ENDSSH
+cd /
+tar -xzf $TARGET_PATH
+echo "Testing installation"
+faust --help || { echo "Installation failed"; exit 1; }
+echo Installation succeeded
+echo You can now use the faustOnStratus command to install your DSP files on the Stratus
+ENDSSH
