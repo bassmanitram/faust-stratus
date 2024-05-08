@@ -1,9 +1,10 @@
+#!/usr/bin/python3
 from ctypes import *
 from sys import platform, argv
 
 def loadStratus(name):
 
-    shared_lib_path = './'+name+'.so'
+    shared_lib_path = name
 
     EffectHandle = POINTER(c_char)
     FloatPointer = POINTER(c_float)
@@ -17,6 +18,8 @@ def loadStratus(name):
     stratus.stratusGetVersion.restype = c_char_p
     stratus.stratusGetKnobCount.argtypes = [EffectHandle]
     stratus.stratusGetKnobCount.restype= c_uint
+    stratus.stratusGetSwitchCount.argtypes = [EffectHandle]
+    stratus.stratusGetSwitchCount.restype= c_uint
     stratus.stratusSetKnob.argtypes = [EffectHandle, c_uint, c_float]
     stratus.stratusGetKnob.argtypes = [EffectHandle, c_uint]
     stratus.stratusGetKnob.restype = c_float
@@ -35,6 +38,7 @@ class Stratus:
         self.stratus = loadStratus(name)
         self.effect = self.stratus.create()
         self.knobCount = self.stratus.stratusGetKnobCount(self.effect)
+        self.switchCount = self.stratus.stratusGetSwitchCount(self.effect)
 
     def setName(self,name):
         self.stratus.stratusSetName(self.effect, name)
@@ -42,8 +46,6 @@ class Stratus:
         return self.stratus.stratusGetName(self.effect)
     def getVersion(self):
         return self.stratus.stratusGetVersion(self.effect)
-    def getKnobCount(self):
-        return self.knobCount
     def setKnob(self,index, value):
         self.stratus.stratusSetKnob(self.effect, index, value)
     def getKnob(self,index):
@@ -63,13 +65,23 @@ class Stratus:
 
 effect = Stratus(argv[1])
 print("Successfully initialized ", effect.getName())
-knobCount = effect.getKnobCount()
 
+knobCount = effect.knobCount
+print(f'Effect has {knobCount} knobs')
 while knobCount > 0:
     knobCount-=1
     knobValue = effect.getKnob(knobCount)
     effect.setKnob(knobCount, knobValue + 0.5)
     assert effect.getKnob(knobCount) == (knobValue + 0.5)
+
+switchCount = effect.switchCount
+print(f'Effect has {switchCount} switches')
+while switchCount > 0:
+    switchCount-=1
+    switchValue = effect.getSwitch(switchCount)
+    newSwitchValue = 1 if switchValue == 0 else 0
+    effect.setSwitch(switchCount, newSwitchValue)
+    assert effect.getSwitch(switchCount) == newSwitchValue
 
 stompSwitch = effect.getStompSwitch()
 newStompSwitch = 1 if stompSwitch == 0 else 0

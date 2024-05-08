@@ -22,10 +22,10 @@ For the moment you have to have the Faust compiler installed locally (but not on
 * Download the [stratus.cpp](./stratus.cpp) file to a conveniently located local place
 * Design and test your pipeline in the [Faust IDE](https://faustide.grame.fr/)
   * Represent Stratus knobs using `vslider` and/or `hslider`
-  * ORDER your sliders by using a label with the syntax `[idx]MySlider` where idx is a non-negative
+  * Represent Stratus switches using either `checkbox`, or `nvalue` with a minimum value of 0, a maximum value of 1 or 2, and a step value of 1.
+  * ORDER your sliders and switches by using a label with the syntax `[idx]MySlider` where idx is a non-negative
     integer. The actual label does not affect what your kob is called in the Stratus app is called. 
-	Stratus knobs themselves are numbered left-to-right, top-to-bottom.
-  * Stratus switches are not yet supported.
+	  Stratus knobs themselves are numbered left-to-right, top-to-bottom.
 * Export the `.dsp` code from the IDE to a local file
 * Generate the full C++ code using the Faust compiler:
 
@@ -54,10 +54,10 @@ If that worked, you are ready! NOW...
 
 * Design and test your pipeline in the [Faust IDE](https://faustide.grame.fr/)
   * Represent Stratus knobs using `vslider` and/or `hslider`
-  * ORDER your sliders by using a label with the syntax `[idx]MySlider` where idx is a non-negative
+  * Represent Stratus switches using either `checkbox`, or `nvalue` with a minimum value of 0, a maximum value of 1 or 2, and a step value of 1.
+  * ORDER your sliders and switches by using a label with the syntax `[idx]MySlider` where idx is a non-negative
     integer. The actual label does not affect what your kob is called in the Stratus app is called. 
 	  Stratus knobs themselves are numbered left-to-right, top-to-bottom.
-  * Stratus switches are not yet supported.
 * Export the `.dsp` code from the IDE to a local file
 
 So you now have the DSP file on your local computer. Since you have installed the SDK on the Stratus, 

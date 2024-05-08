@@ -8,4 +8,8 @@ depth = (min((freq/4),1))*(pow(10,(vslider("depth",0.25,0,0.5,0.01):si.smooth(0.
 w = 512;
 x = 256;
 
-process =  ef.transpose(w, x, depth*os.osc(freq)):*(level);
+onoff = checkbox("On/Off");
+
+mix = nentry("Mix",1,0,2,1);
+
+process = _ <: (ef.transpose(w, x, depth*os.osc(freq)):*(mix/2)),*((abs(1-mix))/2):> *(onoff):*(level);

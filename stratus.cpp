@@ -49,7 +49,8 @@ class Meta
 //
 // Our implementation of the Faust UI interface
 //
-// Effectively we ignore everything except sliders at the moment
+// hsliders and vsliders are knobs
+// checkboxes, and nentries with min=0, max=1 or 2, and step=1 are switches
 //
 
 class UI {
@@ -61,7 +62,16 @@ class UI {
 			}
 		}
 
+	    void add_switch(FAUSTFLOAT* swtch) {
+			if (switchCount < MAXSWITCHES) {
+				switches[switchCount] = swtch;
+				switchCount++;
+			}
+		}
+
 	protected:
+		FAUSTFLOAT* switches[MAXSWITCHES];
+		Uint switchCount = 0;
 		FAUSTFLOAT* knobs[MAXKNOBS];
 		Uint knobCount = 0;
 
@@ -72,8 +82,12 @@ class UI {
 	    void openHorizontalBox(const char* label) {};
 	    void openVerticalBox(const char* label) {};
 	    void closeBox() {};
-	    void addButton(const char* label, FAUSTFLOAT* zone) {};
-	    void addCheckButton(const char* label, FAUSTFLOAT* zone) {};
+	    void addButton(const char* label, FAUSTFLOAT* zone) {
+			this->add_switch(zone);
+		};
+	    void addCheckButton(const char* label, FAUSTFLOAT* zone) {
+			this->add_switch(zone);
+		};
 	    void addVerticalSlider(const char* label, FAUSTFLOAT* zone, FAUSTFLOAT init, FAUSTFLOAT min, FAUSTFLOAT max, FAUSTFLOAT step) {
 //			printf("VSLIDER: %s %p %f %f %f %f\n",label,zone,init,min,max,step);
 			this->add_knob(zone);
@@ -82,7 +96,12 @@ class UI {
 //			printf("HSLIDER: %s %p %f %f %f %f\n",label,zone,init,min,max,step);
 			this->add_knob(zone);
 		};
-	    void addNumEntry(const char* label, FAUSTFLOAT* zone, FAUSTFLOAT init, FAUSTFLOAT min, FAUSTFLOAT max, FAUSTFLOAT step) {};
+	    void addNumEntry(const char* label, FAUSTFLOAT* zone, FAUSTFLOAT init, FAUSTFLOAT min, FAUSTFLOAT max, FAUSTFLOAT step) {
+			FAUSTFLOAT steps = (max - min)/step;
+			if (min == 0 && (max == 1 || max == 2) && step == 1) {
+				this->add_switch(zone);
+			}
+		};
 	    void addHorizontalBargraph(const char* label, FAUSTFLOAT* zone, FAUSTFLOAT min, FAUSTFLOAT max) {};
 	    void addVerticalBargraph(const char* label, FAUSTFLOAT* zone, FAUSTFLOAT min, FAUSTFLOAT max) {};
 	    void addSoundfile(const char* label, const char* filename, void** sf_zone) {};
@@ -131,8 +150,27 @@ struct Stratus
 		MIDDLE = 2
 	};
 
+	static SWITCH_STATE switchStateFromValue(int value) {
+		switch (value) {
+    		case 0: return SWITCH_STATE::UP;
+    		case 1: return SWITCH_STATE::DOWN;
+    		case 2: return SWITCH_STATE::MIDDLE;
+    		default: return SWITCH_STATE::DOWN;
+		}
+	}
+
+	// Use for switch debugging
+	void getTextForEnum(SWITCH_STATE enumVal, std::string *out) {
+		switch (enumVal) {
+			case 0:  *out = "UP";
+			case 1:  *out = "DOWN";
+			case 2:  *out = "MIDDLE";
+			default: *out = "BAD";
+		}
+		return;
+	}
+
 	private:
-		SWITCH_STATE switches[MAXSWITCHES];
 		SWITCH_STATE stompSwitch;
 		std::string name;
 		UI* faustUi;
@@ -162,29 +200,10 @@ struct Stratus
 
 			name = faustMeta->name;
 //			std::cout << "Name retrieved: " << name << std::endl;
-			for (int i = 0; i < MAXSWITCHES; ++i)
-				switches[i] = SWITCH_STATE::DOWN;
 			stompSwitch = DOWN;
 //			std::cout << "INITIALIZED " << name << std::endl;
 		}
 		~Stratus() {}
-
-		// Use for switch debugging
-		// static const int SWITCH_STATES = 3;
-		// const char* swStates[SWITCH_STATES] = {"UP", "MIDDLE", "DOWN"};
-
-		void getTextForEnum(SWITCH_STATE enumVal, std::string *out)
-		{
-			if (enumVal == 0) // SWITCH_STATE::UP)
-				*out = "UP";
-			else if (enumVal == 1) // SWITCH_STATE::MIDDLE)
-				*out = "MIDDLE";
-			else if (enumVal == 2) // SWITCH_STATE::DOWN)
-				*out = "DOWN";
-			else
-				*out = "BAD";
-			return;
-		}
 
 		void setName(std::string name)
 		{
@@ -217,14 +236,21 @@ struct Stratus
 			return in < this->faustUi->knobCount ? *this->faustUi->knobs[in] : 0.5;
 		}
 
+		Uint getSwitchCount() {
+			return this->faustUi->switchCount;
+		}
+
 		void setSwitch(int num, SWITCH_STATE switchVal)
 		{
-			switches[num] = switchVal;
+			if (num < this->faustUi->switchCount) {
+				*(this->faustUi->switches[num]) = switchVal;
+			}
 		}
 
 		SWITCH_STATE getSwitch(int in)
 		{
-			return switches[in];
+			Uint switchVal = in < this->faustUi->switchCount ? *this->faustUi->switches[in] : 0;
+			return switchStateFromValue(switchVal < 3 ? switchVal : 0);
 		}
 
 		void setStompSwitch(SWITCH_STATE switchVal)
@@ -261,6 +287,7 @@ extern "C" {
 	const char* stratusGetName(Stratus* stratus) {return stratus->getName().c_str();}
 	const char* stratusGetVersion(Stratus* stratus){return stratus->getVersion().c_str();}
 	Uint   stratusGetKnobCount(Stratus* stratus){return stratus->getKnobCount();}
+	Uint   stratusGetSwitchCount(Stratus* stratus){return stratus->getSwitchCount();}
 	void  stratusSetKnob(Stratus* stratus, Uint num, float knobVal){stratus->setKnob(num, knobVal);}
 	float stratusGetKnob(Stratus* stratus, Uint in){return stratus->getKnob(in);}
 	void  stratusSetSwitch(Stratus* stratus, Uint num, int switchVal){stratus->setSwitch(num, (Stratus::SWITCH_STATE)switchVal);}
