@@ -4,6 +4,7 @@
 ## translate into other, non-UNIX-shell contexts
 ##
 cd $(realpath $(dirname $0))
-cp ../faust2stratus ../stratus.cpp ../stratus.py .
+cp ../faust2stratus ../stratus.cpp .
+cp ../stratus.py ./stratus-python/stratus/
 docker build -f Dockerfile.build_faust_stratus -t faust:stratus .
-docker run -v "$PWD:/mnt/build" faust:stratus cp /root/faust-stratus.tgz /mnt/build/
+#docker run -v "$PWD:/mnt/build" faust:stratus cp /root/faust-stratus.tgz /mnt/build/

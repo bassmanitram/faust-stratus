@@ -30,7 +30,7 @@ ENV GLIBC_2_7_DIR=/lib-glib-27
 ENV WORKDIR=/root/work
 
 RUN apt update \
- && apt install -y build-essential cmake pkg-config zip curl docker \ 
+ && apt install -y build-essential cmake pkg-config zip curl docker python3-pip \ 
  && apt install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf binutils-arm-linux-gnueabihf cpp-arm-linux-gnueabihf  \
  && update-alternatives --install /usr/bin/c++ c++ /usr/bin/arm-linux-gnueabihf-g++-8 30 \
  && update-alternatives --install /usr/bin/cc cc /usr/bin/arm-linux-gnueabihf-gcc-8 30 \
@@ -40,6 +40,7 @@ COPY . ${WORKDIR}
 
 RUN ${WORKDIR}/build-faust.sh
 RUN ${WORKDIR}/patch-faust.sh
-RUN ${WORKDIR}/stage-faust.sh
+RUN ${WORKDIR}/build-python.sh
+RUN ${WORKDIR}/stage-sdk.sh
 
 WORKDIR ${WORKDIR}

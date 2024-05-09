@@ -8,3 +8,4 @@ cp -a build/* faust-${FAUST_VERSION}/build/
 cd faust-${FAUST_VERSION}/build
 make faust BACKENDS=cpp-embeded-only.cmake TARGETS=regular-nohttpd.cmake
 make install
+

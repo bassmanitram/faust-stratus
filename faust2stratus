@@ -30,7 +30,3 @@ EFFECT_CPP="$EFFECT_DIR/$EFFECT_STEM.cpp"
 EFFECT_SO="$EFFECT_DIR/$EFFECT_STEM.so"
 
 faust -a stratus.cpp "$EFFECT" -o "$EFFECT_CPP" && g++ -fPIC -shared -O3 -g $opts "$EFFECT_CPP" -o "$EFFECT_SO" && BUILT=true
-
-if [[ "$CINTERFACE" && "$BUILT" == "true" ]]; then
-	stratus.py "$EFFECT_SO"
-fi
