@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 from ctypes import *
-from sys import platform, argv
+from sys import argv
 
 def loadStratus(name):
 
