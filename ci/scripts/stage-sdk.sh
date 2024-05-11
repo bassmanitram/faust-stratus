@@ -42,4 +42,4 @@ mv ${STAGEDIR2}/local/srcs/install/* ${STAGEDIR2}
 rmdir ${STAGEDIR2}/local/srcs/install
 
 cd ${STAGEDIR2}
-tar -czf ${HOME}/faust-stratus.tgz *
+zip -r ${HOME}/faust-stratus.zip *

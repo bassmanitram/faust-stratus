@@ -22,12 +22,13 @@ jobs:
 
       - name: Extract file
         run: |
-          docker run --rm faust:stratus sh -c "cp /root/faust-stratus.tgz /tmp/faust-stratus.tgz"
+          docker run -v "/tmp:/tmp" --rm faust:stratus sh -c "cp /root/faust-stratus.zip /tmp/faust-stratus.zip"
 
       - name: Upload extracted file as artifact
         uses: actions/upload-artifact@v2
         with:
-          path: /tmp/faust-stratus.tgz
+          name: installation package
+          path: /tmp/faust-stratus.zip
 
 #      - uses: actions/create-release@v1
 #        with:
