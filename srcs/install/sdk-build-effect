@@ -1,8 +1,8 @@
 ##
-## This script builds a Faust-designed Stratus effect on the Stratus itself
-## from a connected computer, using the installed effect SDK.
+## This script installs a Faust-designed Stratus effect algorithm library onto 
+## the Stratus itself from a connected computer, using the installed effect SDK.
 ##
-## You must have installed the Effects SDK on the Stratus before this will work
+## You must have installed the Effects SDK on the Stratus before this will work.
 ##
 ## You run this script as foillows:
 ##
@@ -39,9 +39,8 @@ TARGET_PATH=/$TARGET_USER/$DSP_FILENAME
 TARGET_PATH_PATTERN="/$TARGET_USER/$DSP_NAME*"
 
 ##
-## Firstly some local cleanup!
+## Install cleanup routine
 ##
-# Graceful Shutdown
 for sig in SIGTERM ERR EXIT; do trap "_term $sig" $sig; done
 _term() {
   trap "" SIGTERM ERR EXIT

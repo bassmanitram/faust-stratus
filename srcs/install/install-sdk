@@ -1,27 +1,24 @@
 #set -euo
 ##
-## This script installs the SDK on the stratus, building it locally if that has not been done
+## This script installs the Effects SDK on the stratus
 ##
 ## To build the SDK, you need docker
 ##
 ## You MUST plug your Stratus into your computer via USB for the installation to take place
 ##
-INSTALLATION_PACKAGE="faust-stratus.tgz"
-cd $(realpath $(dirname $0))/build
-if [[ ! -f "${INSTALLATION_PACKAGE}" ]]; then
-  echo "Building the SDK installation package"
-  ./build-sdk.sh
-fi
+INSTALLATION_PACKAGE="faust-stratus-sdk-armv7.tgz"
+cd $(realpath $(dirname $0))
+[[ -f "${INSTALLATION_PACKAGE}" ]] || { "Cannot find the SDK installation package $INSTALLATION_PACKAGE"; exit 1; }
 
 ##
 ## Is the Stratus connected
 ##
 TARGET_ADDRESS=stratus.local # the first script argument
 ping -c 1 -q $TARGET_ADDRESS >/dev/null 2>&1 || { echo "Cannot find Stratus connection. Please connect Stratus to your computer via USB"; false; }
+
 ##
 ## All this is done to ensure that we only ask for the SSH password once
 ##
-
 TMP_DIR=$(mktemp -d)
 SSH_CFG=$TMP_DIR/ssh-cfg
 SSH_SOCKET=$TMP_DIR/ssh-socket
@@ -29,9 +26,8 @@ TARGET_USER=root
 TARGET_PATH=/$TARGET_USER/$INSTALLATION_PACKAGE
 
 ##
-## Firstly some local cleanup!
+## Install cleanup routines
 ##
-# Graceful Shutdown
 for sig in SIGTERM ERR EXIT; do trap "_term $sig" $sig; done
 _term() {
   trap "" SIGTERM ERR EXIT
@@ -68,4 +64,5 @@ python3 tester.py || { echo "Test execution failed"; exit 1; }
 
 echo Installation succeeded
 echo You can now use the faustOnStratus command to install your DSP files on the Stratus
+echo You can also us the sdk-build-effect command from your computer to drive that process
 ENDSSH

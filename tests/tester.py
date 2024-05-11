@@ -2,7 +2,7 @@ import sys, stratus
 from stratus import Effect
 from ctypes import *
 
-effect = Effect("./tester.so")
+effect = Effect(sys.argv[1])
 
 test_floats =    [1.0,2.1,3.2,4.3,5.4,6.5,7.6,8.7,9.8]
 zeroed_floats =  [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]

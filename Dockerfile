@@ -47,8 +47,10 @@ ENV WORKDIR=/tmp
 ADD ci ci
 ADD srcs srcs
 ADD resources resources
+ADD tests tests
  
 RUN ./ci/scripts/install-faust.sh
+RUN ./ci/scripts/install-stratus-faust.sh
 RUN ./ci/scripts/patch-faust.sh
 RUN ./ci/scripts/install-stratus-python.sh
 RUN ./ci/scripts/stage-sdk.sh

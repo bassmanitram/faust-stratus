@@ -1,39 +1,21 @@
 ##
-## This script installs Faust if it has not been installed, and then adds the
-## components to use it with the Stratus.
+## This script installs the Startus-related Faust files into a pre-existing 
+## Faust installation.
+##
+## Therefore you must already have installed Faust for this script to work.
 ##
 ## Use this script to install these components on your computer.
 ## Use the install-sdk script to install onto the Stratus itself
 ##
-## Note that if you have not install Faust previously, this will install
-## a version that ONLY has the CPP backend enabled. If you want other 
-## backends, first install Faust separately, then run this script.
-##
-## During this installation, your Stratus will not be touched. You
+## During this installation, your Stratus will not be touched. You can
 ## leave it completely unconnected. If you accidentally left it at your
 ## last gig, or in the band rehearsal space, this script doesn't care!
 ##
-## For the installation of Faust you will need a LOT of tools installed - see
-## the FIRST RUN statement in the Dockerfile for what is installed on 
-## Debian Buster (do NOT use anything else from the Docker file for a local
-## installation, or you will likely break your entire system)!
-##
 set -eu
-
-##
-## Some local cleanup!
-##
-for sig in SIGTERM ERR EXIT; do trap "_term $sig" $sig; done
-_term() {
-  trap "" SIGTERM ERR EXIT
-  [[ -d "$WORKDIR" ]] && rm -rf "$WORKDIR"
-  exit 0
-}
-
 cd $(realpath $(dirname $0))
-WORKDIR=$(mktemp -d)
-cp -a ./build/* $WORKDIR
-export WORKDIR
-cd $WORKDIR
-./install-faust.sh true
-./install-stratus-python.sh
+./local/scripts/install-stratus-faust.sh
+./local/scripts/install-stratus-python.sh
+faust2stratus ./local/tests/tester.dsp true
+python3 ./local/tests/tester.py ./local/tests/tester.so
+
+echo Local installation succeeded

@@ -30,11 +30,5 @@
 *.exe
 *.out
 *.app
-resources/*.cpp
-build-sdk/**/stratus.py
-build-sdk/faust2stratus
-build-sdk/faust-stratus.tgz
-build-sdk/stratus.cpp
-build-sdk/tester.cpp
-build-sdk/stratus-python/*.egg-info/**
-build-sdk/stratus-python/build/**
+
+faust-stratus.tgz
