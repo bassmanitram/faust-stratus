@@ -57,7 +57,15 @@ class Effect:
         self.effect_lib.stratusSetStompSwitch(self.effect, value)
     def getStompSwitch(self):
         return self.effect_lib.stratusGetStompSwitch(self.effect)
-    def stompSwitchPressed(self,count, inputs, outputs):
-        self.effect_lib.stratusStompSwitchPressed(self.effect, count, inputs, outputs)
-    def compute(self,count, inputs, outputs):
-        self.effect_lib.stratusCompute(self.effect, count, inputs, outputs)
+    def stompSwitchPressed(self,inputs):
+        count = len(inputs)
+        input_floats = (c_float * count)(*inputs)
+        output_floats = (c_float * count)(0.0)
+        self.effect_lib.stratusStompSwitchPressed(self.effect, count, input_floats, output_floats)
+        return [output_float for output_float in output_floats]
+    def compute(self,inputs):
+        count = len(inputs)
+        input_floats = (c_float * count)(*inputs)
+        output_floats = (c_float * count)(*inputs)
+        self.effect_lib.stratusStompSwitchPressed(self.effect, count, input_floats, output_floats)
+        return [output_float for output_float in output_floats]

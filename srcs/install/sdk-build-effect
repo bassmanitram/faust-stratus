@@ -1,6 +1,6 @@
 ##
 ## This script builds a Faust-designed Stratus effect on the Stratus itself
-## using the effect SDK.
+## from a connected computer, using the installed effect SDK.
 ##
 ## You must have installed the Effects SDK on the Stratus before this will work
 ##

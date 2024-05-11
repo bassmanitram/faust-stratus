@@ -24,23 +24,31 @@
 ##
 FROM debian:buster
 
-ENV FAUST_VERSION=2.72.14
-ENV PATCHELF_VERSION=0.18.0
-ENV GLIBC_2_7_DIR=/lib-glib-27
-ENV WORKDIR=/root/work
-
 RUN apt update \
- && apt install -y build-essential cmake pkg-config zip curl docker python3-pip \ 
- && apt install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf binutils-arm-linux-gnueabihf cpp-arm-linux-gnueabihf  \
+ && apt install -y build-essential cmake pkg-config zip curl docker python3-pip
+
+RUN apt install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf binutils-arm-linux-gnueabihf cpp-arm-linux-gnueabihf  \
  && update-alternatives --install /usr/bin/c++ c++ /usr/bin/arm-linux-gnueabihf-g++-8 30 \
  && update-alternatives --install /usr/bin/cc cc /usr/bin/arm-linux-gnueabihf-gcc-8 30 \
  && update-alternatives --install /lib/cpp cpp /usr/bin/arm-linux-gnueabihf-g++-8 30
 
-COPY . ${WORKDIR}
+ENV PATCHELF_VERSION=0.18.0
+ENV GLIBC_2_7_DIR=/lib-glib-27
+ 
+ENV FAUST_VERSION=2.72.14
+ENV FAUST_PREFIX=/usr/local
+ENV FAUST_BIN_DIR=${FAUST_PREFIX}/bin
+ENV FAUST_ARCH_DIR=${FAUST_PREFIX}/share/faust
+ENV FAUST_LIB_DIR=${FAUST_PREFIX}/lib
 
-RUN ${WORKDIR}/build-faust.sh
-RUN ${WORKDIR}/patch-faust.sh
-RUN ${WORKDIR}/build-python.sh
-RUN ${WORKDIR}/stage-sdk.sh
+WORKDIR /tmp/
+ENV WORKDIR=/tmp
 
-WORKDIR ${WORKDIR}
+ADD ci ci
+ADD srcs srcs
+ADD resources resources
+ 
+RUN ./ci/scripts/install-faust.sh
+RUN ./ci/scripts/patch-faust.sh
+RUN ./ci/scripts/install-stratus-python.sh
+RUN ./ci/scripts/stage-sdk.sh

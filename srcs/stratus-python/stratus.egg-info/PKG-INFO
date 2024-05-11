@@ -1,0 +1,12 @@
+Metadata-Version: 2.1
+Name: stratus
+Version: 0.1.0
+Summary: A class used to interact with (appropriately compiled) Chaos Stratus effect libraries
+Home-page: https://github.com/bassmanitram/faust-stratus
+Author: Martin Bartlett
+Author-email: martin.j.bartlett@gmail.com
+License: BSD 2-clause
+Platform: UNKNOWN
+
+UNKNOWN
+

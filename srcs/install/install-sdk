@@ -4,10 +4,10 @@
 ##
 ## To build the SDK, you need docker
 ##
-## You MUST plug your strarus into your computer via USB for the installation to take place
+## You MUST plug your Stratus into your computer via USB for the installation to take place
 ##
 INSTALLATION_PACKAGE="faust-stratus.tgz"
-cd $(realpath $(dirname $0))/build-sdk
+cd $(realpath $(dirname $0))/build
 if [[ ! -f "${INSTALLATION_PACKAGE}" ]]; then
   echo "Building the SDK installation package"
   ./build-sdk.sh
@@ -60,6 +60,12 @@ cd /
 tar -xzf $TARGET_PATH
 echo "Testing installation"
 faust --help || { echo "Installation failed"; exit 1; }
+
+echo Running basic interface tests
+cd /root
+faust2stratus tester.dsp true || { echo "Test DSP compile failed"; exit 1; }
+python3 tester.py || { echo "Test execution failed"; exit 1; }
+
 echo Installation succeeded
 echo You can now use the faustOnStratus command to install your DSP files on the Stratus
 ENDSSH

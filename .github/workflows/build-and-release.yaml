@@ -1,0 +1,39 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build_and_release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Login to Docker Hub (optional)
+        # Add login action here if pushing to Docker Hub
+        # uses: docker/login-action@v2
+        # with:
+        #   username: ${{ secrets.DOCKER_USERNAME }}
+        #   password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build Docker image
+        run: docker build -t faust:stratus .
+
+      - name: Extract file
+        run: |
+          docker run --rm faust:stratus sh -c "cp /root/faust-stratus.tgz /tmp/faust-stratus.tgz"
+
+      - name: Upload extracted file as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: /tmp/faust-stratus.tgz
+
+#      - uses: actions/create-release@v1
+#        with:
+#          tag_name: ${{ github.sha }}
+#          release_name: "Release ${{ github.sha }}"
+#          body: "Built and released from commit ${{ github.sha }}"
+#          draft: true  # Set to true for draft releases
+#          prerelease: false  # Set to true for pre-releases
+#          file_glob: artifacts/faust-stratus.tgz
