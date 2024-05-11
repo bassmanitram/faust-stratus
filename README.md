@@ -10,7 +10,7 @@ Your most important resources:
 
 ## Installation
 
-Download the latest version of the SDK
+Download the latest version of the SDK bundle and un-tar it into a folder of your choosing.
 
 You can install this SDK in either of two places - or both!
 
