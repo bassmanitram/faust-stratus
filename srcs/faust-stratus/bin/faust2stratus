@@ -1,26 +1,36 @@
 #
 # A script for building a Stratus effect from a Faust DSP file
-# If the script is run on the Stratus, the compile has all the
-# recommended optimization options and no C interface. Otherwise 
-# we give no hardware-specific options, and we include the C 
-# interface
+# 
+# All other options are passed to the Faust compiler ... except --stratusc
+# which is used to indicate the the compiled shared library should include 
+# the C interface. That interface allows the library to be loaded and used 
+# in Python.
 #
 EFFECT=${1:?First argument must be the Faust DSP file path}
+EFFECT=$(realpath "$EFFECT")
+STRATUS_EFFECTS_DIR=${STRATUS_EFFECTS_DIR:-/opt/firmware/effects}
 
-EFFECT=$(realpath $EFFECT)
+shift
+opts=( )
+for opt in "$@"; do
+	if [[ "$opt" == "--stratusc" ]]; then
+		CINTERFACE=-DCINTERFACE
+	elif [[ "$opt" == "--stratusinstall" ]]; then
+		STRATUSINSTALL="true"
+		echo INSTALLING
+	else
+		opts+=("$opt")
+	fi
+done
+[[ ${#opts} -gt 0 ]] && FAUST_OPTS=$(printf "%q " "${arr[@]}")
 
 cd $(realpath $(dirname $0))
 
 arch=$(gcc -march=native -Q --help=target|grep '^  -marc' | awk '{print $2}')
 if [[ "$arch" == "armv7-a" ]]; then
-	# We are on the pedal (or something that looks like it)
-	# Max optimization and no C interface
-	CINTERFACE=${CINTERFACE:+-DCINTERFACE}
-	opts="-march=armv7-a -mtune=cortex-a8 -mfloat-abi=hard -mfpu=neon -ftree-vectorize -ffast-math ${CINTERFACE}"
+	CPP_OPTS="-march=armv7-a -mtune=cortex-a8 -mfloat-abi=hard -mfpu=neon -ftree-vectorize -ffast-math ${CINTERFACE}"
 else
-	# We are off the pedal - so this is probably a test build so we include the C interface
-	CINTERFACE="-DCINTERFACE"
-	opts="${CINTERFACE}"
+	CPP_OPTS="${CINTERFACE}"
 fi
 
 EFFECT_DIR="$(dirname "$EFFECT")"
@@ -28,5 +38,31 @@ EFFECT_FILENAME="$(basename "$EFFECT")"
 EFFECT_STEM="${EFFECT_FILENAME%%.*}"
 EFFECT_CPP="$EFFECT_DIR/$EFFECT_STEM.cpp"
 EFFECT_SO="$EFFECT_DIR/$EFFECT_STEM.so"
+echo -- faust -a stratus.cpp $FAUST_OPTS "$EFFECT" -o "$EFFECT_CPP" 
+if faust -a stratus.cpp $FAUST_OPTS "$EFFECT" -o "$EFFECT_CPP" && g++ -fPIC -shared -O3 -g $CPP_OPTS "$EFFECT_CPP" -o "$EFFECT_SO"; then
 
-faust -a stratus.cpp "$EFFECT" -o "$EFFECT_CPP" && g++ -fPIC -shared -O3 -g $opts "$EFFECT_CPP" -o "$EFFECT_SO" && BUILT=true
+	if [[ "$STRATUSINSTALL" == "true" && -w "$STRATUS_EFFECTS_DIR" ]]; then
+		# Install the effect if it has a stratusId global declaration
+		STRATUS_ID=$(sed -n 's/\s*declare\s\s*stratusId\s\s*"\([0-9a-f]\{8\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{12\}\)";/\1/p' "${EFFECT}")
+		[[ "$STRATUS_ID" ]] || { echo "Unable to install the effect - no valid 'startusId' declaration found in the DSP file"; exit 1; }
+		STRATUS_VERSION=$(sed -n 's/\s*declare\s\s*version\s\s*"\([^"]*\)";/\1/p' "${EFFECT}")
+		SO_FILE="${STRATUS_EFFECTS_DIR}/${STRATUS_ID}.so"
+		VER_FILE="${STRATUS_EFFECTS_DIR}/${STRATUS_ID}.txt"
+		BACKUP_SUFFIX=$(date +%Y-%m-%dT%H-%M-%S)
+		[[ -f "${SO_FILE}" ]] && mv "$SO_FILE" /$HOME/${STRATUS_ID}.so.${BACKUP_SUFFIX}
+		cp "$EFFECT_SO" "${SO_FILE}"
+		echo "Effect $EFFECT_SO installed as $SO_FILE"
+		if [[ "$STRATUS_VERSION" ]]; then
+			[[ -f "${VER_FILE}" ]] && cp "$VER_FILE" /$HOME/${STRATUS_ID}.txt.${BACKUP_SUFFIX}
+			echo -n "$STRATUS_VERSION" > "$VER_FILE"
+			echo "Effect $EFFECT_SO version set to $STRATUS_VERSION"
+		else
+			echo "Unable to set version of $SO_FILE - no version declaration found in the DSP file"
+		fi
+	else
+		echo "NOT installing effect $EFFECT_SO into Stratus effect folder $STRATUS_EFFECTS_DIR"
+	fi
+else
+	echo effect build failed
+	exit 1
+fi

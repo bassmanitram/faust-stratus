@@ -13,6 +13,13 @@
 // Compile this using 'faust2stratus tester.dsp true' in order to get the C interface
 // then run the tester.py script to test the installation of the SDK.
 //
+
+//
+// A stratus ID to test the installation logic in the install scripts
+//
+declare stratusId "2ce39b6c-10fa-11ef-9fc3-eb5bff98409a";
+declare version "0.1.0";
+
 factor = vslider("Factor", 0, -2, 2, 1);
 on_off = checkbox("On/Off");
 
