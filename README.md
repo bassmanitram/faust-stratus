@@ -42,6 +42,7 @@ workshops, that will help you - _but_ there are certain principles that will hel
 file that is easily adapted to the Stratus:
 
 * **You get one input signal and must produce only one output signal**
+
   If you don't know what that means, read the Faust doc - but the Stratus is a mono pedal.
 
   _Within_ the algorithm you can split the signal any number of times you need, but you
@@ -62,6 +63,7 @@ file that is easily adapted to the Stratus:
   ```
 
 * **Represent Stratus knobs using `vslider` and/or `hslider`**. 
+
   This toolkit will recognize `hslider` and `vslider` UI components as Stratus *knobs*. For a nice UI
   in the Faust IDE you can add as many organizing containers as you want, but they will have no effect 
   on the final representation. Neither will the labels you give your knobs.
@@ -79,6 +81,7 @@ file that is easily adapted to the Stratus:
   to your effect, you can have the knobs defined as you want and can remove the algorithmic scaling.
 
 * **Represent Stratus switches using either `checkbox`, or `nvalue`** 
+
   While a rarer component of a Stratus UI, switches are also supported by this toolkit. Stratus supports
   both 2-state (on/off) and 3-state (on/mid/off) switches. Technically this toolkit doesn't distinguish 
   between the two - it's up to the Stratus firmware to use the switches correctly.
@@ -91,6 +94,7 @@ file that is easily adapted to the Stratus:
   Again, organize them as you will in the Faust IDE UI, but only these two controls will be recognized
 
 * **ORDER your sliders and switches correctly according to your Stratus UI**
+
   Without some hinting, Faust will "order" your controls in the code in alphabetical order by label.
 
   This is highly unlikely to be what you want.
@@ -116,6 +120,7 @@ file that is easily adapted to the Stratus:
   knobs and of switches are independent of each other.
 
 * **Declare the UUID of your Stratus effect in the DSP code**
+
   That is, if you want it properly installed on the pedal. You do it like this (preferably at 
   the top of your DSP code, but technically it doesn't really matter where):
 
@@ -126,6 +131,7 @@ file that is easily adapted to the Stratus:
   For the "9 KNOB" test effect, use `55631e3a-94f7-42f8-8204-f5c6c11c4a21`.
 
 * **Declare the version of your Stratus effect in the DSP code**
+
   That is, if you want it properly installed on the pedal. You do it like this (preferably at 
   the top of your DSP code, but technically it doesn't really matter where):
 
