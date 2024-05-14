@@ -25,6 +25,7 @@ for opt in "$@"; do
 done
 [[ ${#opts} -gt 0 ]] && FAUST_OPTS=$(printf "%q " "${arr[@]}")
 
+
 CPP_OPTS="-fPIC -shared -O3 -g "
 
 arch=$(gcc -march=native -Q --help=target|grep '^  -marc' | awk '{print $2}')
@@ -40,11 +41,22 @@ EFFECT_STEM="${EFFECT_FILENAME%%.*}"
 EFFECT_CPP="$EFFECT_DIR/$EFFECT_STEM.cpp"
 EFFECT_SO="$EFFECT_DIR/$EFFECT_STEM.so"
 
+if which g++ >/dev/null 2>&1; then
+	CPP=true
+	GPP="g++ ${CPP_OPTS} $EFFECT_CPP -o $EFFECT_SO"
+else
+	CPP=false
+	GPP="echo Not compiling the Faust c++ code: No c++ compiler found"
+fi
+
 echo "Building effect $EFFECT:" >&2
 echo -- "  Faust options: -a ${STRATUS_ARCH} $FAUST_OPTS" >&2
-echo -- "  C++ options:   $CPP_OPTS" >&2
+[[ "$CPP" == "true" ]] && echo -- "  C++ options:   $CPP_OPTS" >&2
 
-if faust -a ${STRATUS_ARCH} $FAUST_OPTS "$EFFECT" -o "$EFFECT_CPP" && g++ ${CPP_OPTS} "$EFFECT_CPP" -o "$EFFECT_SO"; then
+faust -a ${STRATUS_ARCH} $FAUST_OPTS "$EFFECT" -o "$EFFECT_CPP" && $GPP
+RC=$?
+
+if [[ $RC -eq 0 && "$CPP" == "true" ]]; then
 
 	if [[ "$STRATUSINSTALL" == "true" && -w "$STRATUS_EFFECTS_DIR" ]]; then
 		# Install the effect if it has a stratusId global declaration
@@ -67,7 +79,7 @@ if faust -a ${STRATUS_ARCH} $FAUST_OPTS "$EFFECT" -o "$EFFECT_CPP" && g++ ${CPP_
 	else
 		echo "NOT installing effect $EFFECT_SO into Stratus effect folder $STRATUS_EFFECTS_DIR"
 	fi
-else
+elif [[ "$CPP" == "true" ]]; then
 	echo effect build failed
 	exit 1
 fi
