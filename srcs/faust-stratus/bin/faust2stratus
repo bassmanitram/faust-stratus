@@ -9,6 +9,7 @@
 EFFECT=${1:?First argument must be the Faust DSP file path}
 EFFECT=$(realpath "$EFFECT")
 STRATUS_EFFECTS_DIR=${STRATUS_EFFECTS_DIR:-/opt/firmware/effects}
+STRATUS_ARCH=${STRATUS_ARCH:-stratus.cpp}
 
 shift
 opts=( )
@@ -24,13 +25,13 @@ for opt in "$@"; do
 done
 [[ ${#opts} -gt 0 ]] && FAUST_OPTS=$(printf "%q " "${arr[@]}")
 
-cd $(realpath $(dirname $0))
+CPP_OPTS="-fPIC -shared -O3 -g "
 
 arch=$(gcc -march=native -Q --help=target|grep '^  -marc' | awk '{print $2}')
 if [[ "$arch" == "armv7-a" ]]; then
-	CPP_OPTS="-march=armv7-a -mtune=cortex-a8 -mfloat-abi=hard -mfpu=neon -ftree-vectorize -ffast-math ${CINTERFACE}"
+	CPP_OPTS="$CPP_OPTS -march=armv7-a -mtune=cortex-a8 -mfloat-abi=hard -mfpu=neon -ftree-vectorize -ffast-math ${CINTERFACE}"
 else
-	CPP_OPTS="${CINTERFACE}"
+	CPP_OPTS="$CPP_OPTS ${CINTERFACE}"
 fi
 
 EFFECT_DIR="$(dirname "$EFFECT")"
@@ -38,8 +39,12 @@ EFFECT_FILENAME="$(basename "$EFFECT")"
 EFFECT_STEM="${EFFECT_FILENAME%%.*}"
 EFFECT_CPP="$EFFECT_DIR/$EFFECT_STEM.cpp"
 EFFECT_SO="$EFFECT_DIR/$EFFECT_STEM.so"
-echo -- faust -a stratus.cpp $FAUST_OPTS "$EFFECT" -o "$EFFECT_CPP" 
-if faust -a stratus.cpp $FAUST_OPTS "$EFFECT" -o "$EFFECT_CPP" && g++ -fPIC -shared -O3 -g $CPP_OPTS "$EFFECT_CPP" -o "$EFFECT_SO"; then
+
+echo "Building effect $EFFECT:" >&2
+echo -- "  Faust options: -a ${STRATUS_ARCH} $FAUST_OPTS" >&2
+echo -- "  C++ options:   $CPP_OPTS" >&2
+
+if faust -a ${STRATUS_ARCH} $FAUST_OPTS "$EFFECT" -o "$EFFECT_CPP" && g++ ${CPP_OPTS} "$EFFECT_CPP" -o "$EFFECT_SO"; then
 
 	if [[ "$STRATUSINSTALL" == "true" && -w "$STRATUS_EFFECTS_DIR" ]]; then
 		# Install the effect if it has a stratusId global declaration

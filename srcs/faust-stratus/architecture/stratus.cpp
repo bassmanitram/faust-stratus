@@ -35,12 +35,20 @@ class Meta
 {
 	private:
 		const char* nameKey = "name";
+		const char* stratusIdKey = "stratusId";
+		const char* versionKey = "version";
 	protected:
-		const char* name;
+		std::string effectName;
+		std::string effectId;
+		std::string version;
 	public:
 		void declare(const char* key, const char* value) {
 			if (strcmp(key,nameKey) == 0) {
-				name = value;
+				effectName.assign(value);
+			} else if (strcmp(key,stratusIdKey) == 0) {
+				effectId.assign(value);
+			} else if (strcmp(key,versionKey) == 0) {
+				version.assign(value);
 			}
 		}
 	friend class Stratus;
@@ -172,52 +180,68 @@ struct Stratus
 
 	private:
 		SWITCH_STATE stompSwitch;
-		std::string name;
+		std::string effectName;
+		std::string effectId;
+		std::string version;
 		UI* faustUi;
 		Meta* faustMeta;
 		FAUSTCLASS* faust;
-
-	protected:
-		std::string version;
 
 	public:
 		int fSampleRate = 44100;
 		Stratus()
 		{
-//			std::cout << "INITIALIZING" << std::endl;
 			faustUi = new UI;
-//			std::cout << "UI created" << std::endl;
 			faustMeta = new Meta;
-//			std::cout << "Meta created" << std::endl;
-			faust = new FAUSTCLASS();
-//			std::cout << "Faust created" << std::endl;
+			faust = new FAUSTCLASS;
 			faust->metadata(faustMeta);
-//			std::cout << "Faust metadata retrieved" << std::endl;
-			faust->init(fSampleRate);
-//			std::cout << "Faust initialized" << std::endl;
-			faust->buildUserInterface(faustUi);
-//			std::cout << "Faust UI interrogated" << std::endl;
+			effectId = faustMeta->effectId;
+			effectName = faustMeta->effectName;
+			version = faustMeta->version;
 
-			name = faustMeta->name;
-//			std::cout << "Name retrieved: " << name << std::endl;
+			faust->init(fSampleRate);
+			faust->buildUserInterface(faustUi);
+
 			stompSwitch = DOWN;
-//			std::cout << "INITIALIZED " << name << std::endl;
 		}
 		~Stratus() {}
 
 		void setName(std::string name)
 		{
-			this->name = name;
+			printf("HEY THERE\n");
+			this->effectName = name;
 		}
 
 		std::string getName()
 		{
-			return name;
+			return this->effectName;
+		}
+
+		const char* getNameC()
+		{
+			return this->effectName.c_str();
+		}
+
+		/* I could not get .c_str() to work in the C interface code for this getter, so had to create another method to do it */
+		const char* getEffectIdC()
+		{
+			return this->effectId.c_str();
+		}
+
+		std::string getEffectId()
+		{
+			//printf("In getter: %s\n",this->effectId);
+			return this->effectId;
+		}
+
+		const char * getVersionC()
+		{
+			return this->version.c_str();
 		}
 
 		std::string getVersion()
 		{
-			return version;
+			return this->version;
 		}
 
 		Uint getKnobCount() {
@@ -283,9 +307,10 @@ extern "C" {
 	//
 	// Expose the C inteface to allow for, say, Python texting
 	//
-	void  stratusSetName(Stratus* stratus, char* name) { stratus->setName(name); }
-	const char* stratusGetName(Stratus* stratus) {return stratus->getName().c_str();}
-	const char* stratusGetVersion(Stratus* stratus){return stratus->getVersion().c_str();}
+	const char* stratusGetEffectId(Stratus* stratus){return stratus->getEffectIdC();}
+	const char* stratusGetName(Stratus* stratus){return stratus->getNameC();}
+	const char* stratusGetVersion(Stratus* stratus){return stratus->getVersionC();}
+
 	Uint   stratusGetKnobCount(Stratus* stratus){return stratus->getKnobCount();}
 	Uint   stratusGetSwitchCount(Stratus* stratus){return stratus->getSwitchCount();}
 	void  stratusSetKnob(Stratus* stratus, Uint num, float knobVal){stratus->setKnob(num, knobVal);}
