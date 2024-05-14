@@ -1,7 +1,0 @@
-setup.py
-stratus/__init__.py
-stratus/stratus.py
-stratus.egg-info/PKG-INFO
-stratus.egg-info/SOURCES.txt
-stratus.egg-info/dependency_links.txt
-stratus.egg-info/top_level.txt
