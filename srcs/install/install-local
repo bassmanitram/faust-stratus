@@ -12,10 +12,11 @@
 ## last gig, or in the band rehearsal space, this script doesn't care!
 ##
 set -eu
-cd $(realpath $(dirname $0))
-./local/scripts/install-stratus-faust.sh
-./local/scripts/install-stratus-python.sh
-faust2stratus ./local/tests/tester.dsp true
-python3 ./local/tests/tester.py ./local/tests/tester.so
+cd $(realpath $(dirname $0))/local
+./scripts/install-stratus-faust.sh
+./scripts/install-stratus-python.sh
+rm -rf ./tests/tester.so ./tests/tester.cpp
+faust2stratus ./tests/tester.dsp --stratusc
+python3 ./tests/tester.py ./tests/tester.so
 
 echo Local installation succeeded
