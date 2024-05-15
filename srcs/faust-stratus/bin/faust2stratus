@@ -24,7 +24,6 @@ for opt in "$@"; do
 done
 [[ ${#opts} -gt 0 ]] && FAUST_OPTS=$(printf "%q " "${arr[@]}")
 
-
 CPP_OPTS="-fPIC -shared -O3 -g "
 
 arch=$(gcc -march=native -Q --help=target|grep '^  -marc' | awk '{print $2}')
