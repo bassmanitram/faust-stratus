@@ -11,7 +11,7 @@ For now, you'll need to be using Linux to have the tools work for you, though th
 why, in the future, we can't get the tools running on Windows and Mac.
 
 ## Installation
-Download the [latest version of the SDK bundle](../../releases/download/v0.2.0/faust-stratus-v0.2.0.zip) to your local computer 
+Download the [latest version of the SDK bundle](../../releases/download/v0.2.1/faust-stratus-v0.2.1.zip) to your local computer 
 (NOT the Stratus pedal) and un-zip it into a folder of your choosing.
 
 You can install this SDK in either of two places - or both!
