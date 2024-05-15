@@ -41,27 +41,6 @@ I'm not going to detail that process - Faust itself has some very complete doc, 
 workshops, that will help you - _but_ there are certain principles that will help you build a Faust DSP
 file that is easily adapted to the Stratus:
 
-* **You get one input signal and must produce only one output signal**
-
-  If you don't know what that means, read the Faust doc - but the Stratus is a mono pedal.
-
-  _Within_ the algorithm you can split the signal any number of times you need, but you
-  MUST merge it all back to one signal on output. 
-  
-  Here's a "blend" pattern that might help explain that:
-
-  ```
-  ...
-  blend = vslider("[1]Blend", 0.5, 0, 1, 0.01);
-  weird_effect = ...;
-
-  // Splits the single input signal in two, applies the weird effect to one, scales the two signals
-  // based upon the blend control such that blend = 0 gives only clean, blend = 1 gives only weird, 
-  // and anything in between ... well, blends the two appropriately - and finally merges the internal
-  // signals back to one
-  process = _ <: (weird_effect : *(blend)),*(1-blend) :> _;
-  ```
-
 * **Represent Stratus knobs using `vslider` and/or `hslider`**. 
 
   This toolkit will recognize `hslider` and `vslider` UI components as Stratus *knobs*. For a nice UI
@@ -80,7 +59,7 @@ file that is easily adapted to the Stratus:
   to apply the necessary scaling of the values in your algorithm. When you move to a UI that is dedicated
   to your effect, you can have the knobs defined as you want and can remove the algorithmic scaling.
 
-* **Represent Stratus switches using either `checkbox`, or `nvalue`** 
+* **Represent Stratus switches using `button`, `checkbox`, or `nvalue`** 
 
   While a rarer component of a Stratus UI, switches are also supported by this toolkit. Stratus supports
   both 2-state (on/off) and 3-state (on/mid/off) switches. Technically this toolkit doesn't distinguish 
@@ -88,36 +67,58 @@ file that is easily adapted to the Stratus:
   
   To represent switches in the Faust IDE UI and the Faust DSP file, you can use:
 
+  * `button`, or
   * `checkbox`, or
   * `nvalue`, with a minimum value of 0, a maximum value of 1 or 2, and a step value of 1.
 
-  Again, organize them as you will in the Faust IDE UI, but only these two controls will be recognized
+  Again, organize them as you will in the Faust IDE UI, but only these controls will be recognized
 
-* **ORDER your sliders and switches correctly according to your Stratus UI**
+* **Mark your sliders and switches correctly according to your Stratus UI**
 
-  Without some hinting, Faust will "order" your controls in the code in alphabetical order by label.
+  As-is, your sliders, buttons, checkboxes, and/or nvalues will **not** be "attached" to the equivalent
+  knobs and switches in the Stratus UI.
 
-  This is highly unlikely to be what you want.
+  To do _that_ you must exploit a feature of Faust UI labels - adding metadata.
 
-  However, Faust _does_ take hints that cause the controls to be programmatically declared in the
-  order you want no matter their label or how they appear in the IDE. You do this via the label
-  (so, er, perhaps "...no matter their label...", above, is a little misleading :)). 
-  
-  Such a hint has the syntax:
+  This is how you do it:
 
   ```
-  vslider("[0]This is my totally ignored label for knob 0", ...)
+  vslider("This is my totally ignored label for my first knob[stratus:0]", ...)
   ```
 
-  With (evidently) the `[n]` bit providing the ordering you want. 
+  More generally, you add the `stratus` key with a value between 0 and 9 
+  for knobs, and between 0 and 4 for switches (if you aren't familiar with
+  zero-based indices, welcome to that world!).
+
+  Obviously, those indices indicate to which control on the Stratus effect UI 
+  a specific Faust control pertains. Stratus knobs themselves are numbered 
+  left-to-right, top-to-bottom. Switches too.
+
+  If you try to assign the same control number to two different Faust controls
+  then the second control will be ignored (here I mean two different controls 
+  of the same "class" - knob and switch numbering are independent of each other).
+
+* **You get one input signal and must produce only one output signal**
+
+  If you don't know what that means, read the Faust doc - but the Stratus is a mono pedal.
+
+  _Within_ the algorithm you can split the signal any number of times you need, but you
+  MUST merge it all back to one signal on output. 
   
-  In case it's not obvious, `n` should be a non-negative integer, but the `n` value itself doesn't 
-  actually matter to this toolkit - only the ordering that it enforces is taken into account.
- 
-  Note that Stratus knobs themselves are numbered left-to-right, top-to-bottom. Switches too.
-  Note also that within the toolkit the ordering of knobs is independent of the type of slider
-  you declared to represent the knob, and the same for switches - _and_ that the orderings of
-  knobs and of switches are independent of each other.
+  Here's a "blend" pattern that might help explain that:
+
+  ```
+  ...
+  // The blend control is the SECOND knob on the Stratus UI
+  blend = vslider("Blend[stratus:1]", 0.5, 0, 1, 0.01);
+  weird_effect = ...;
+
+  // Splits the single input signal in two, applies the weird effect to one, scales the two signals
+  // based upon the blend control such that blend = 0 gives only clean, blend = 1 gives only weird, 
+  // and anything in between ... well, blends the two appropriately - and finally merges the internal
+  // signals back to one
+  process = _ <: (weird_effect : *(blend)),*(1-blend) :> _;
+  ```
 
 * **Declare the UUID of your Stratus effect in the DSP code**
 
@@ -231,13 +232,13 @@ version file - and any existing effect files for the same UUID will have been ba
 (it's up to _you_ to clean those up occasionally).
 
 ## Using the Python wrapper
-If you want to use the [Python interface](./stratus.py) to test the effect without having to load it up in 
+If you want to use the Python interface to test your effects without having to load them up into
 the pedal itself, you simply need to add the `--stratusc` option to the `faust2stratus` command line.
 
-The python interface is installed on the Stratus by the `install-sdk` command, so you can even do that
+The Python interface is installed on the Stratus by the `install-sdk` command, so you can even do that
 on the Stratus itself (it has Python installed already).
 
 But this is probably of more use in a local build, where you can devise tests for your effect that closely
 emulate how the Stratus will interact with your effect without actually having to build the UI yet.
 
-See the delivered [test script](../tester.py) for examples of how this can be done.
+See the delivered [test script](.tests/tester.py) for examples of how this can be done.
