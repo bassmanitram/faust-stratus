@@ -14,14 +14,32 @@
 #include <iostream>
 #include <cstdio>
 
+//
+// Switch off virtual except for what we really want to export
+//
+//#define virtual
+#define STRATUS_INTERFACE virtual
+//
+// We define our class to be Stratus ... BUT if you use faust2stratus to build this
+// then this gets changed to either 'DeeEssPee" (I have to spell it like that here
+// otherwise the faust compiler will modify it!!!) or whatever you specify on the 
+// faust2stratus command line with the -stratusclass option.
+//
+#define STRATUS_CLASS Stratus
+//
+// Because we are an adaptor, not a superclass, the
+// Faust superclass must NOT be dsp - use the option
+// "-scn FaustDSP" to make this work
+//
+#define FAUST_SCN FaustDSP
+class FAUST_SCN {};
+
 #ifndef FAUSTFLOAT
 #define FAUSTFLOAT float
 #endif
 
 #define MAXKNOBS 10
 #define MAXSWITCHES 5
-
-#define virtual
 
 #ifndef Uint
 typedef unsigned int Uint;
@@ -51,7 +69,7 @@ class Meta
 				version.assign(value);
 			}
 		}
-	friend class Stratus;
+	friend class STRATUS_CLASS;
 };
 
 //
@@ -118,7 +136,7 @@ class UiControlSet {
 		}
 		
 	friend class UI;
-	friend class Stratus;
+	friend class STRATUS_CLASS;
 };
 
 class UI {
@@ -205,10 +223,8 @@ class UI {
 			} 
 		}
 
-	friend class Stratus;
+	friend class STRATUS_CLASS;
 };
-
-class dsp {};
 
 /******************************************************************************
  ******************************************************************************
@@ -239,7 +255,7 @@ class dsp {};
 // algorithm that it represents - THIS code is simply how to use Faust code
 // 'directly' in the stratus.
 //
-struct Stratus
+struct STRATUS_CLASS
 {
 	enum SWITCH_STATE
 	{
@@ -279,7 +295,7 @@ struct Stratus
 
 	public:
 		int fSampleRate = 44100;
-		Stratus()
+		STRATUS_CLASS()
 		{
 			faustMeta = new Meta;
 			faust = new FAUSTCLASS;
@@ -295,7 +311,7 @@ struct Stratus
 
 			stompSwitch = DOWN;
 		}
-		~Stratus() {}
+		~STRATUS_CLASS() {}
 
 		void setName(std::string name)
 		{
@@ -339,42 +355,42 @@ struct Stratus
 			return this->faustUi->knobs->controlCount;
 		}
 
-		void setKnob(int num, float knobVal)
-		{
-			this->faustUi->knobs->setValue(num, knobVal);
-		}
-
-		float getKnob(int in)
-		{
-			return this->faustUi->knobs->getValue(in);
-		}
-
 		Uint getSwitchCount() {
 			return this->faustUi->switches->controlCount;
 		}
 
-		void setSwitch(int num, SWITCH_STATE switchVal)
+		STRATUS_INTERFACE void setKnob(int num, float knobVal)
+		{
+			this->faustUi->knobs->setValue(num, knobVal);
+		}
+
+		STRATUS_INTERFACE float getKnob(int in)
+		{
+			return this->faustUi->knobs->getValue(in);
+		}
+
+		STRATUS_INTERFACE void setSwitch(int num, SWITCH_STATE switchVal)
 		{
 			this->faustUi->switches->setValue(num, switchVal);
 		}
 
-		SWITCH_STATE getSwitch(int in)
+		STRATUS_INTERFACE SWITCH_STATE getSwitch(int in)
 		{
 			Uint switchVal = this->faustUi->switches->getValue(in);
 			return switchStateFromValue(switchVal < 3 ? switchVal : 0);
 		}
 
-		void setStompSwitch(SWITCH_STATE switchVal)
+		STRATUS_INTERFACE void setStompSwitch(SWITCH_STATE switchVal)
 		{
 			stompSwitch = switchVal;
 		}
 
-		bool getStompSwitch()
+		STRATUS_INTERFACE bool getStompSwitch()
 		{
 			return stompSwitch;
 		}
 
-		void stompSwitchPressed(int count, FAUSTFLOAT *inputs, FAUSTFLOAT *outputs)
+		STRATUS_INTERFACE void stompSwitchPressed(int count, FAUSTFLOAT *inputs, FAUSTFLOAT *outputs)
 		{
 			if (stompSwitch)
 			{
@@ -383,34 +399,34 @@ struct Stratus
 			return;
 		}
 
-		void compute(int count, FAUSTFLOAT *inputs, FAUSTFLOAT *outputs) {
+		STRATUS_INTERFACE void compute(int count, FAUSTFLOAT *inputs, FAUSTFLOAT *outputs) {
 			this->faust->compute(count,&inputs,&outputs);
 		}
 };
 
 extern "C" {
-	Stratus* create() {	return new Stratus;}
+	STRATUS_CLASS* create() {	return new STRATUS_CLASS;}
 #ifdef CINTERFACE
 	//
 	// Expose the C inteface to allow for, say, Python texting
 	//
-	const char* stratusGetEffectId(Stratus* stratus){return stratus->getEffectIdC();}
-	const char* stratusGetName(Stratus* stratus){return stratus->getNameC();}
-	const char* stratusGetVersion(Stratus* stratus){return stratus->getVersionC();}
+	const char* stratusGetEffectId(STRATUS_CLASS* stratus){return stratus->getEffectIdC();}
+	const char* stratusGetName(STRATUS_CLASS* stratus){return stratus->getNameC();}
+	const char* stratusGetVersion(STRATUS_CLASS* stratus){return stratus->getVersionC();}
 
-	Uint   stratusGetKnobCount(Stratus* stratus){return stratus->getKnobCount();}
-	Uint   stratusGetSwitchCount(Stratus* stratus){return stratus->getSwitchCount();}
-	void  stratusSetKnob(Stratus* stratus, Uint num, float knobVal){stratus->setKnob(num, knobVal);}
-	float stratusGetKnob(Stratus* stratus, Uint in){return stratus->getKnob(in);}
-	void  stratusSetSwitch(Stratus* stratus, Uint num, int switchVal){stratus->setSwitch(num, (Stratus::SWITCH_STATE)switchVal);}
-	Uint   stratusGetSwitch(Stratus* stratus, Uint in) {return stratus->getSwitch(in);}
-	void  stratusSetStompSwitch(Stratus* stratus, Uint switchVal) {stratus->setStompSwitch((Stratus::SWITCH_STATE)switchVal);}
-	bool  stratusGetStompSwitch(Stratus* stratus) {return stratus->getStompSwitch();}
-	void  stratusStompSwitchPressed(Stratus* stratus, Uint count, FAUSTFLOAT *inputs, FAUSTFLOAT *outputs){stratus->stompSwitchPressed(count, inputs, outputs);}
-	void  stratusCompute(Stratus* stratus, Uint count, FAUSTFLOAT *inputs, FAUSTFLOAT *outputs) {stratus->compute(count, inputs, outputs);}
+	Uint   stratusGetKnobCount(STRATUS_CLASS* stratus){return stratus->getKnobCount();}
+	Uint   stratusGetSwitchCount(STRATUS_CLASS* stratus){return stratus->getSwitchCount();}
+	void  stratusSetKnob(STRATUS_CLASS* stratus, Uint num, float knobVal){stratus->setKnob(num, knobVal);}
+	float stratusGetKnob(STRATUS_CLASS* stratus, Uint in){return stratus->getKnob(in);}
+	void  stratusSetSwitch(STRATUS_CLASS* stratus, Uint num, int switchVal){stratus->setSwitch(num, (STRATUS_CLASS::SWITCH_STATE)switchVal);}
+	Uint   stratusGetSwitch(STRATUS_CLASS* stratus, Uint in) {return stratus->getSwitch(in);}
+	void  stratusSetStompSwitch(STRATUS_CLASS* stratus, Uint switchVal) {stratus->setStompSwitch((STRATUS_CLASS::SWITCH_STATE)switchVal);}
+	bool  stratusGetStompSwitch(STRATUS_CLASS* stratus) {return stratus->getStompSwitch();}
+	void  stratusStompSwitchPressed(STRATUS_CLASS* stratus, Uint count, FAUSTFLOAT *inputs, FAUSTFLOAT *outputs){stratus->stompSwitchPressed(count, inputs, outputs);}
+	void  stratusCompute(STRATUS_CLASS* stratus, Uint count, FAUSTFLOAT *inputs, FAUSTFLOAT *outputs) {stratus->compute(count, inputs, outputs);}
 #endif
 }
 
-using dsp_creator_t = Stratus *(*)();
+using dsp_creator_t = STRATUS_CLASS *(*)();
 
 /******************* END stratus.cpp ****************/
