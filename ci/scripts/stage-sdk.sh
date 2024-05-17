@@ -20,7 +20,7 @@ mkdir -p ${STAGE_FAUST_ARCH_DIR}
 mkdir -p usr/local/lib/python3.5/
 mkdir -p usr/local/lib/python3.8/
 cp ${WORKDIR}/tests/* .${HOME}
-cp -a ${FAUST_BIN_DIR}/faust ${FAUST_BIN_DIR}/*[Ss]tratus* ${STAGE_FAUST_BIN_DIR}
+cp -a ${FAUST_BIN_DIR}/faust ${FAUST_BIN_DIR}/faustpath ${FAUST_BIN_DIR}/*[Ss]tratus* ${STAGE_FAUST_BIN_DIR}
 cp -a ${FAUST_ARCH_DIR}/*.lib ${FAUST_ARCH_DIR}/*[Ss]tratus* ${STAGE_FAUST_ARCH_DIR}
 cp -a ${FAUST_LIB_DIR}/*[Ff]aust* ${STAGE_FAUST_LIB_DIR}
 cp -a /usr/local/lib/python3.7/dist-packages usr/local/lib/python3.5/ 
