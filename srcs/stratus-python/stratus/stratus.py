@@ -1,59 +1,88 @@
 from ctypes import *
 from sys import argv
 
-EffectHandle = c_void_p
+InstanceHandle = c_void_p
 FloatPointer = POINTER(c_float)
 
+class EffectLib:
+    def __init__(self,so_file):
+        lib = CDLL(so_file)
+        self.create = lib.create
+        self.getExtensions = lib.getExtensions
 
-def loadEffect(so_file):
+        #
+        # Using StratusExtensions
+        #
+        self.stratusGetEffectId = getattr(lib,"_ZN17StratusExtensions11getEffectIdEv")
+        self.stratusGetName = getattr(lib,"_ZN17StratusExtensions7getNameEv")
+        self.stratusGetVersion = getattr(lib,"_ZN17StratusExtensions10getVersionEv")
+        self.stratusGetKnobCount = getattr(lib,"_ZN17StratusExtensions12getKnobCountEv")
+        self.stratusGetSwitchCount = getattr(lib,"_ZN17StratusExtensions14getSwitchCountEv")
 
-    effect_lib = CDLL(so_file)
-    effect_lib.create.restype = EffectHandle
+        #
+        # Using the effect
+        #
+        self.stratusSetKnob = getattr(lib,"_ZN3dsp7setKnobEif")
+        self.stratusGetKnob = getattr(lib,"_ZN3dsp7getKnobEi")
+        self.stratusSetSwitch = getattr(lib,"_ZN3dsp9setSwitchEiNS_12SWITCH_STATEE")
+        self.stratusGetSwitch = getattr(lib,"_ZN3dsp9getSwitchEi")
+        self.stratusSetStompSwitch = getattr(lib,"_ZN3dsp14setStompSwitchENS_12SWITCH_STATEE")
+        self.stratusGetStompSwitch = getattr(lib,"_ZN3dsp14getStompSwitchEv")
+        self.stratusStompSwitchPressed = getattr(lib,"_ZN3dsp18stompSwitchPressedEiPfS0_")
+        self.stratusCompute = getattr(lib,"_ZN3dsp7computeEiPfS0_")
 
-    effect_lib.stratusGetEffectId.argtypes = [EffectHandle]
-    effect_lib.stratusGetEffectId.restype = c_char_p
+        self.create.restype = InstanceHandle
+        self.getExtensions.argtypes = [ InstanceHandle ]
+        self.getExtensions.restype = InstanceHandle
 
-    effect_lib.stratusGetName.argtypes = [EffectHandle]
-    effect_lib.stratusGetName.restype = c_char_p
 
-    effect_lib.stratusGetVersion.argtypes = [EffectHandle]
-    effect_lib.stratusGetVersion.restype = c_char_p
+        self.stratusGetEffectId.argtypes = [InstanceHandle]
+        self.stratusGetEffectId.restype = c_char_p
 
-    effect_lib.stratusGetKnobCount.argtypes = [EffectHandle]
-    effect_lib.stratusGetKnobCount.restype= c_uint
+        self.stratusGetName.argtypes = [InstanceHandle]
+        self.stratusGetName.restype = c_char_p
 
-    effect_lib.stratusGetSwitchCount.argtypes = [EffectHandle]
-    effect_lib.stratusGetSwitchCount.restype= c_uint
+        self.stratusGetVersion.argtypes = [InstanceHandle]
+        self.stratusGetVersion.restype = c_char_p
 
-    effect_lib.stratusSetKnob.argtypes = [EffectHandle, c_uint, c_float]
+        self.stratusGetKnobCount.argtypes = [InstanceHandle]
+        self.stratusGetKnobCount.restype= c_uint
 
-    effect_lib.stratusGetKnob.argtypes = [EffectHandle, c_uint]
-    effect_lib.stratusGetKnob.restype = c_float
+        self.stratusGetSwitchCount.argtypes = [InstanceHandle]
+        self.stratusGetSwitchCount.restype= c_uint
 
-    effect_lib.stratusSetSwitch.argtypes = [EffectHandle, c_uint, c_uint]
+        self.stratusSetKnob.argtypes = [InstanceHandle, c_uint, c_float]
 
-    effect_lib.stratusGetSwitch.argtypes = [EffectHandle, c_uint]
-    effect_lib.stratusGetSwitch.restype= c_uint
+        self.stratusGetKnob.argtypes = [InstanceHandle, c_uint]
+        self.stratusGetKnob.restype = c_float
 
-    effect_lib.stratusSetStompSwitch.argtypes = [EffectHandle, c_uint]
+        self.stratusSetSwitch.argtypes = [InstanceHandle, c_uint, c_uint]
 
-    effect_lib.stratusGetStompSwitch.argtypes = [EffectHandle]
-    effect_lib.stratusGetStompSwitch.restype = c_uint
+        self.stratusGetSwitch.argtypes = [InstanceHandle, c_uint]
+        self.stratusGetSwitch.restype= c_uint
 
-    effect_lib.stratusStompSwitchPressed.argtypes = [EffectHandle, c_uint, FloatPointer, FloatPointer]
-    effect_lib.stratusCompute.argtypes = [EffectHandle, c_uint, FloatPointer, FloatPointer]
-    return effect_lib
+        self.stratusSetStompSwitch.argtypes = [InstanceHandle, c_uint]
+
+        self.stratusGetStompSwitch.argtypes = [InstanceHandle]
+        self.stratusGetStompSwitch.restype = c_uint
+
+        self.stratusStompSwitchPressed.argtypes = [InstanceHandle, c_uint, FloatPointer, FloatPointer]
+        self.stratusCompute.argtypes = [InstanceHandle, c_uint, FloatPointer, FloatPointer]
+
 
 class Effect:
     def __init__(self,so_file):
-        self.effect_lib = loadEffect(so_file)
-        self.effect = self.effect_lib.create()
-        self.knobCount = self.effect_lib.stratusGetKnobCount(self.effect)
-        self.switchCount = self.effect_lib.stratusGetSwitchCount(self.effect)
+        self.effect_lib = EffectLib(so_file)
 
-        self.version = self.effect_lib.stratusGetVersion(self.effect).decode()
-        self.name = self.effect_lib.stratusGetName(self.effect).decode()
-        self.effectId = self.effect_lib.stratusGetEffectId(self.effect).decode()
+        self.effect = self.effect_lib.create()
+        self.effectExtensions = self.effect_lib.getExtensions(self.effect)
+
+        self.knobCount = self.effect_lib.stratusGetKnobCount(self.effectExtensions)
+        self.switchCount = self.effect_lib.stratusGetSwitchCount(self.effectExtensions)
+
+        self.version = self.effect_lib.stratusGetVersion(self.effectExtensions).decode()
+        self.name = self.effect_lib.stratusGetName(self.effectExtensions).decode()
+        self.effectId = self.effect_lib.stratusGetEffectId(self.effectExtensions).decode()
 
     def setKnob(self,index, value):
         self.effect_lib.stratusSetKnob(self.effect, index, value)

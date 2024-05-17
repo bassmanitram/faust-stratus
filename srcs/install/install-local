@@ -16,7 +16,7 @@ cd $(realpath $(dirname $0))/local
 ./scripts/install-stratus-faust.sh
 ./scripts/install-stratus-python.sh
 rm -rf ./tests/tester.so ./tests/tester.cpp
-faust2stratus ./tests/tester.dsp --stratusc
+faust2stratus ./tests/tester.dsp
 python3 ./tests/tester.py ./tests/tester.so
 
 echo Local installation succeeded

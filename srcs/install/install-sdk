@@ -59,8 +59,8 @@ faust --help || { echo "Installation failed"; exit 1; }
 
 echo Running basic interface tests
 cd /root
-faust2stratus tester.dsp --stratusc --stratusinstall &&
-python3 tester.py "/opt/firmware/effects/2ce39b6c-10fa-11ef-9fc3-eb5bff98409a.so"
+faust2stratus tester.dsp -stratusinstall &&
+python3 tester.py "/opt/update/sftp/firmware/effects/2ce39b6c-10fa-11ef-9fc3-eb5bff98409a.so"
 RC=\$?
 rm -f "/opt/firmware/effects/2ce39b6c-10fa-11ef-9fc3-eb5bff98409a".*
 [[ \$RC -eq 0 ]] || { echo "Test execution failed"; exit 1; }

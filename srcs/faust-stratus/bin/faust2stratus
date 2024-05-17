@@ -10,7 +10,7 @@
 . faustpath
 
 ARCHFILE=${STRATUS_ARCH:-stratus.cpp}
-STRATUS_EFFECTS_DIR=${STRATUS_EFFECTS_DIR:-/opt/firmware/effects}
+STRATUS_EFFECTS_DIR=${STRATUS_EFFECTS_DIR:-/opt/update/sftp/firmware/effects}
 : ${CXX:=g++}
 which "$CXX" && CPPCOMPILE=true
 
@@ -22,28 +22,28 @@ if [ "$(uname -m)" = armv7l ]; then        # for the Stratus
 elif [ "$(uname -s)" = Darwin ]; then      # for macOS
     if [[ $(sysctl -n machdep.cpu.brand_string) =~ "Apple" ]]; then
         # Silicon MX
-        MYGCCFLAGS="-Ofast"
+        MYGCCFLAGS=""
     else
         # Intel
-        MYGCCFLAGS="-Ofast -march=native"
+        MYGCCFLAGS="-march=native "
     fi
 else                                        # for Linux (Intel)
-    MYGCCFLAGS="-Ofast -march=native"
+    MYGCCFLAGS="-march=native"
 fi
 
-CXXFLAGS+=" -fPIC -shared -O3 -g $MYGCCFLAGS"
+CXXFLAGS+=" -fPIC -shared -O3 $MYGCCFLAGS"
 
 #
 # Pick out the options
 #
-OPTIONS="-scn FaustDSP"
-CXXDEFS=""
+OPTIONS="-scn FaustDSP -light"
 STRATUSCLASS=dsp
 while [[ "$1" ]]; do
 	opt=$1
 	shift
 	if [[ "$opt" == "-stratusc" ]]; then
-		CXXDEFS+=" -DCINTERFACE"
+		# Ignore obsolete option
+		true
 	elif [[ "$opt" == "-stratusinstall" ]]; then
 		STRATUSINSTALL="true"
 	elif [[ "$opt" == "-stratusclass" ]]; then
@@ -71,36 +71,43 @@ for f in $FILES; do
 	# compile faust to c++
 	echo "Building effect $EFFECT:" >&2
 	echo "  Faust options: -i -a $ARCHFILE $OPTIONS $EFFECT -o $EFFECT_CPP"
+	[[ "$CPPCOMPILE" == true ]] && echo "  $CXX options  : $CXXFLAGS $EFFECT_CPP -o $EFFECT_SO"
     faust -i -a $ARCHFILE $OPTIONS "$EFFECT" -o "$EFFECT_CPP" || exit
 
 	#
 	# OK, faust makes a bit of a hash of the way we want to do stuff,
-	# so we modify our class define after Faust has done its bit. 
+	# so we modify our class definition and some other stuff after Faust 
+	# has done its bit. 
 	#
-	sed -i 's/^\(\s*\#define\s\s*STRATUS_CLASS\s\CVs*\)Stratus\s*$/\1 '"$STRATUSCLASS"'/' "$EFFECT_CPP"
+	sed -i 's/^\(\s*\#define\s\s*STRATUS_CLASS\s\s*\)Stratus\s*$/\1 '"$STRATUSCLASS"'/' "$EFFECT_CPP"
+	sed -i 's/^\(\s*\)virtual\s\s*/\1FAUST_VIRTUAL /' "$EFFECT_CPP"
 
 	if [[ "$CPPCOMPILE" == true ]]; then
     	# compile c++ to binary
     	(
-        	$CXX $CXXFLAGS "$EFFECT_CPP" $CXXDEFS -o "$EFFECT_SO"
+        	$CXX $CXXFLAGS "$EFFECT_CPP" -o "$EFFECT_SO"
 			RC=$?
         	if [[ $RC -eq 0 && $(uname) == Darwin ]]; then
             	codesign --sign - --deep --force "$EFFECT_SO"
 				RC=$?
         	fi
-			exit $?
+			exit $RC
     	) > /dev/null || exit
 
 		if [[ "$STRATUSINSTALL" == "true" && -w "$STRATUS_EFFECTS_DIR" ]]; then
 			# Install the effect if it has a stratusId global declaration
+
+			#
+			# Get the ID from the DSP file
+			#
 			STRATUS_ID=$(sed -n 's/\s*declare\s\s*stratusId\s\s*"\([0-9a-f]\{8\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{12\}\)";/\1/p' "${EFFECT}")
 			[[ "$STRATUS_ID" ]] || { echo "Unable to install the effect - no valid 'startusId' declaration found in the DSP file"; exit 1; }
 			STRATUS_VERSION=$(sed -n 's/\s*declare\s\s*version\s\s*"\([^"]*\)";/\1/p' "${EFFECT}")
 			SO_FILE="${STRATUS_EFFECTS_DIR}/${STRATUS_ID}.so"
 			VER_FILE="${STRATUS_EFFECTS_DIR}/${STRATUS_ID}.txt"
 			BACKUP_SUFFIX=$(date +%Y-%m-%dT%H-%M-%S)
-			[[ -f "${SO_FILE}" ]] && mv "$SO_FILE" /$HOME/${STRATUS_ID}.so.${BACKUP_SUFFIX}
-			cp "$EFFECT_SO" "${SO_FILE}"
+			[[ -f "${SO_FILE}" ]] && cp "$SO_FILE" /$HOME/${STRATUS_ID}.so.${BACKUP_SUFFIX}
+			cp "$EFFECT_SO" "${SO_FILE}" || { echo "failed to install $EFFECT_SO as $SO_FILE"; exit 1; }
 			echo "Effect $EFFECT_SO installed as $SO_FILE"
 			if [[ "$STRATUS_VERSION" ]]; then
 				[[ -f "${VER_FILE}" ]] && cp "$VER_FILE" /$HOME/${STRATUS_ID}.txt.${BACKUP_SUFFIX}
