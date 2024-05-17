@@ -10,6 +10,10 @@ Your most important resources:
 For now, you'll need to be using Linux to have the tools work for you, though there is no reason
 why, in the future, we can't get the tools running on Windows and Mac.
 
+The Linux-preference has sense, by the way: If you generate CPP from Faust on Linux then it will reference standard
+Linux libraries. If you _then_ modify the code, it should be still be direct compilable and usable on the Stratus. If, 
+however, you generate the CPP on, say, a Mac, you MAY not get code that is easily compilable on the Stratus.
+
 ## Installation
 Download the [latest version of the SDK bundle](../../releases/download/v0.3.0/faust-stratus-v0.3.0.zip) to your local computer 
 (NOT the Stratus pedal) and un-zip it into a folder of your choosing.
