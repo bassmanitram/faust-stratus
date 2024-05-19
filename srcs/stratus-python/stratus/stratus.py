@@ -8,16 +8,26 @@ class EffectLib:
     def __init__(self,so_file):
         lib = CDLL(so_file)
         self.create = lib.create
-        self.getExtensions = lib.getExtensions
+        try:
+            self.getExtensions = lib.getExtensions
+        except:
+            self.getExtensions = None
 
         #
         # Using StratusExtensions
         #
-        self.stratusGetEffectId = getattr(lib,"_ZN17StratusExtensions11getEffectIdEv")
-        self.stratusGetName = getattr(lib,"_ZN17StratusExtensions7getNameEv")
-        self.stratusGetVersion = getattr(lib,"_ZN17StratusExtensions10getVersionEv")
-        self.stratusGetKnobCount = getattr(lib,"_ZN17StratusExtensions12getKnobCountEv")
-        self.stratusGetSwitchCount = getattr(lib,"_ZN17StratusExtensions14getSwitchCountEv")
+        if self.getExtensions is not None:
+            self.stratusGetEffectId = getattr(lib,"_ZN17StratusExtensions11getEffectIdEv")
+            self.stratusGetName = getattr(lib,"_ZN17StratusExtensions7getNameEv")
+            self.stratusGetVersion = getattr(lib,"_ZN17StratusExtensions10getVersionEv")
+            self.stratusGetKnobCount = getattr(lib,"_ZN17StratusExtensions12getKnobCountEv")
+            self.stratusGetSwitchCount = getattr(lib,"_ZN17StratusExtensions14getSwitchCountEv")
+        else:
+            self.stratusGetEffectId = None
+            self.stratusGetName = None
+            self.stratusGetVersion = None
+            self.stratusGetKnobCount = None
+            self.stratusGetSwitchCount = None
 
         #
         # Using the effect
@@ -32,24 +42,24 @@ class EffectLib:
         self.stratusCompute = getattr(lib,"_ZN3dsp7computeEiPfS0_")
 
         self.create.restype = InstanceHandle
-        self.getExtensions.argtypes = [ InstanceHandle ]
-        self.getExtensions.restype = InstanceHandle
+        if self.getExtensions is not None:
+            self.getExtensions.argtypes = [ InstanceHandle ]
+            self.getExtensions.restype = InstanceHandle
 
+            self.stratusGetEffectId.argtypes = [InstanceHandle]
+            self.stratusGetEffectId.restype = c_char_p
 
-        self.stratusGetEffectId.argtypes = [InstanceHandle]
-        self.stratusGetEffectId.restype = c_char_p
+            self.stratusGetName.argtypes = [InstanceHandle]
+            self.stratusGetName.restype = c_char_p
 
-        self.stratusGetName.argtypes = [InstanceHandle]
-        self.stratusGetName.restype = c_char_p
+            self.stratusGetVersion.argtypes = [InstanceHandle]
+            self.stratusGetVersion.restype = c_char_p
 
-        self.stratusGetVersion.argtypes = [InstanceHandle]
-        self.stratusGetVersion.restype = c_char_p
+            self.stratusGetKnobCount.argtypes = [InstanceHandle]
+            self.stratusGetKnobCount.restype= c_uint
 
-        self.stratusGetKnobCount.argtypes = [InstanceHandle]
-        self.stratusGetKnobCount.restype= c_uint
-
-        self.stratusGetSwitchCount.argtypes = [InstanceHandle]
-        self.stratusGetSwitchCount.restype= c_uint
+            self.stratusGetSwitchCount.argtypes = [InstanceHandle]
+            self.stratusGetSwitchCount.restype= c_uint
 
         self.stratusSetKnob.argtypes = [InstanceHandle, c_uint, c_float]
 
@@ -75,14 +85,21 @@ class Effect:
         self.effect_lib = EffectLib(so_file)
 
         self.effect = self.effect_lib.create()
-        self.effectExtensions = self.effect_lib.getExtensions(self.effect)
-
-        self.knobCount = self.effect_lib.stratusGetKnobCount(self.effectExtensions)
-        self.switchCount = self.effect_lib.stratusGetSwitchCount(self.effectExtensions)
-
-        self.version = self.effect_lib.stratusGetVersion(self.effectExtensions).decode()
-        self.name = self.effect_lib.stratusGetName(self.effectExtensions).decode()
-        self.effectId = self.effect_lib.stratusGetEffectId(self.effectExtensions).decode()
+        if self.effect_lib.getExtensions is not None:
+            effectExtensions = self.effect_lib.getExtensions(self.effect)
+            self.knobCount = self.effect_lib.stratusGetKnobCount(effectExtensions)
+            self.switchCount = self.effect_lib.stratusGetSwitchCount(effectExtensions)
+            self.version = self.effect_lib.stratusGetVersion(effectExtensions).decode()
+            self.name = self.effect_lib.stratusGetName(effectExtensions).decode()
+            self.effectId = self.effect_lib.stratusGetEffectId(effectExtensions).decode()
+            self.extensionsPresent = True
+        else:
+            self.extensionsPresent = False
+            self.knobCount = -1
+            self.switchCount = -1
+            self.version = 0
+            self.name = "Unknown"
+            self.effectId = "Unknown"
 
     def setKnob(self,index, value):
         self.effect_lib.stratusSetKnob(self.effect, index, value)

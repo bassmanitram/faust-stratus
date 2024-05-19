@@ -41,12 +41,14 @@ STRATUSCLASS=dsp
 while [[ "$1" ]]; do
 	opt=$1
 	shift
-	if [[ "$opt" == "-stratusc" ]]; then
+	if [[ "$opt" =~ ^--?"stratusc"$ ]]; then
 		# Ignore obsolete option
 		true
-	elif [[ "$opt" == "-stratusinstall" ]]; then
+	elif [[ "$opt" =~ ^--?"stratusinstall"$ ]]; then
 		STRATUSINSTALL="true"
-	elif [[ "$opt" == "-stratusclass" ]]; then
+	elif [[ "$opt" =~ ^--?"-nocppc"$ ]]; then
+		CPPCOMPILE="false"
+	elif [[ "$opt" =~ ^--?"-stratusclass"$ ]]; then
 		STRATUSCLASS=${1:-dsp}
 		shift
 	elif [[ -f "$opt" && ${opt: -4} == ".dsp" ]]; then
@@ -73,12 +75,6 @@ for f in $FILES; do
 	echo "  Faust options: -i -a $ARCHFILE $OPTIONS $EFFECT -o $EFFECT_CPP"
 	[[ "$CPPCOMPILE" == true ]] && echo "  $CXX options  : $CXXFLAGS $EFFECT_CPP -o $EFFECT_SO"
     faust -i -a $ARCHFILE $OPTIONS "$EFFECT" -o "$EFFECT_CPP" || exit
-
-	#
-	# OK, faust makes a bit of a hash of the way we want to do stuff,
-	# so we modify our class definition after Faust has done its bit. 
-	#
-	sed -i 's/^\(\s*\#define\s\s*STRATUS_CLASS\s\s*\)Stratus\s*$/\1 '"$STRATUSCLASS"'/' "$EFFECT_CPP"
 
 	if [[ "$CPPCOMPILE" == true ]]; then
     	# compile c++ to binary
@@ -118,7 +114,7 @@ for f in $FILES; do
 			echo "NOT installing effect $EFFECT_SO into Stratus effect folder $STRATUS_EFFECTS_DIR"
 		fi
 	else
-		echo "NOT CPP compiling $EFFECT_CPP - $CXX not found"
+		echo "NOT CPP compiling $EFFECT_CPP"
 	fi
 done
 
