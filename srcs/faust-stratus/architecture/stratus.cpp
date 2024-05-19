@@ -14,11 +14,8 @@
 #include <cstdio>
 
 //
-// Switch off virtual except for what we really want to export
+// The exported functions of the resulting shared object
 //
-// This only really becomes effective if faust2stratus is being used
-//
-#define FAUST_VIRTUAL
 #define STRATUS_API virtual
 //
 // We define our class to be Stratus ... BUT if you use faust2stratus to build this

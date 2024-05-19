@@ -36,7 +36,7 @@ CXXFLAGS+=" -fPIC -shared -O3 $MYGCCFLAGS"
 #
 # Pick out the options
 #
-OPTIONS="-scn FaustDSP -light"
+OPTIONS="-scn FaustDSP -light -nvi"
 STRATUSCLASS=dsp
 while [[ "$1" ]]; do
 	opt=$1
@@ -76,11 +76,9 @@ for f in $FILES; do
 
 	#
 	# OK, faust makes a bit of a hash of the way we want to do stuff,
-	# so we modify our class definition and some other stuff after Faust 
-	# has done its bit. 
+	# so we modify our class definition after Faust has done its bit. 
 	#
 	sed -i 's/^\(\s*\#define\s\s*STRATUS_CLASS\s\s*\)Stratus\s*$/\1 '"$STRATUSCLASS"'/' "$EFFECT_CPP"
-	sed -i 's/^\(\s*\)virtual\s\s*/\1FAUST_VIRTUAL /' "$EFFECT_CPP"
 
 	if [[ "$CPPCOMPILE" == true ]]; then
     	# compile c++ to binary
