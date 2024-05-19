@@ -15,20 +15,27 @@
 
 //
 // The exported functions of the resulting shared object
+// And we don't want the Faust class to export - so use the '-nvi' option
+// in the Faust compiler
 //
 #define STRATUS_API virtual
+
 //
-// We define our class to be Stratus ... BUT if you use faust2stratus to build this
-// then this gets changed to either 'DeeEssPee" (I have to spell it like that here
-// otherwise the faust compiler will modify it!!!) or whatever you specify on the 
-// faust2stratus command line with the -stratusclass option.
+// The craziest C macro hack I've come across! So, we don't want the Faust stuff to
+// to have a superclass of 'DSP' (in lowercase) - so we use the -scn option in the Faust compile.
+// And why don't we want that? Because the Stratus engine needs that to be the (super)class
+// of the Stratus interface, but we aren't using class hierarchy here, but the adaptor pattern. 
+// HOWEVER what the Faust compiler does with the -scn option is a blanket replacement of 'DSP' 
+// (in lowercase), even in our code - so if we want to use 'DSP' (in lowercase) we have to hide 
+// it from the Faust compiler - and this is how to do that :D
 //
-#define STRATUS_CLASS Stratus
+#define STRATUS_CLASS d\
+s\
+p
+
 //
-// Because we are an adaptor, not a superclass, the
-// Faust superclass must NOT be dsp - use the option
-// "-scn FaustDSP" to make this work
-//
+// And this is that "non-DSP" (in lowercase) superclass. 
+// Use the option "-scn FaustDSP" to make this work
 #define FAUST_SCN FaustDSP
 class FAUST_SCN {};
 
