@@ -4,5 +4,6 @@
 		"FAUSTFLOAT",
 		"MAXKNOBS",
 		"MAXSWITCHES"
-	]
+	],
+	"cmake.configureOnOpen": false
 }

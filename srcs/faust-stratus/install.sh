@@ -3,7 +3,7 @@ set -eu
 # Install the Stratus-related files into their proper Faust locations
 #
 
-cd ${WORKDIR:-$(realpath $(dirname $0))/..}
+cd $(realpath $(dirname $0))
 #
 # Find the bin and architecture file directories. If already
 # set, use those, otherwise discover them. If the version of
@@ -17,13 +17,13 @@ FAUST_ARCH_DIR=${FAUST_ARCH_DIR:-$(faust --archdir)}
 echo "Installing Faust components to support the Chaos Stratus"
 
 if [ -w "$FAUST_ARCH_DIR" ]; then
-	cp -a ./srcs/faust-stratus/architecture/* "$FAUST_ARCH_DIR"
+	cp -a ./architecture/* "$FAUST_ARCH_DIR"
 else
-	sudo cp -a ./srcs/faust-stratus/architecture/* "$FAUST_ARCH_DIR"
+	sudo cp -a ./architecture/* "$FAUST_ARCH_DIR"
 fi
 
 if [ -w "$FAUST_BIN_DIR" ]; then
-	cp -a ./srcs/faust-stratus/bin/* "$FAUST_BIN_DIR"
+	cp -a ./bin/* "$FAUST_BIN_DIR"
 else
-	sudo cp -a ./srcs/faust-stratus/bin/* "$FAUST_BIN_DIR"
+	sudo cp -a ./bin/* "$FAUST_BIN_DIR"
 fi

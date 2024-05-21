@@ -25,7 +25,6 @@ ping -c 1 -q $TARGET_HOST >/dev/null 2>&1 || { echo "Cannot find Stratus connect
 TMP_DIR=$(mktemp -d)
 SSH_CFG=$TMP_DIR/ssh-cfg
 SSH_SOCKET=$TMP_DIR/ssh-socket
-##TARGET_PATH=/$TARGET_USER/$INSTALLATION_PACKAGE
 
 ##
 ## Install cleanup routines
@@ -50,25 +49,50 @@ ENDCFG
 ssh -F "$SSH_CFG" -f -N -l $TARGET_USER $TARGET_HOST
 
 # Upload the installation file:
-scp -F "$SSH_CFG" "${INSTALLATION_PACKAGE}" "$TARGET_ADDRESS:"
+scp -F "$SSH_CFG" "${INSTALLATION_PACKAGE}" "$TARGET_ADDRESS:/tmp"
 
 # Install the installation file:
 ssh -F "$SSH_CFG" "$TARGET_ADDRESS" -T <<ENDSSH
-[[ -w "/" ]] || SUDO=sudo
-cd /
-\$SUDO tar -xzf \$HOME/$INSTALLATION_PACKAGE
-echo "Testing installation"
-faust --help || { echo "Installation failed"; exit 1; }
+RC=0
 
-echo Running basic interface tests
-cd
+[[ -w "/" ]] || SUDO=sudo
+
+TEMPDIR=\$(mktemp -d)
+
+for sig in SIGTERM ERR EXIT; do trap "_term \$sig" \$sig; done
+_term() {
+  trap "" SIGTERM ERR EXIT
+  rm -rf \$TEMPDIR /tmp/$INSTALLATION_PACKAGE
+  \$SUDO rm -f "/opt/firmware/effects/2ce39b6c-10fa-11ef-9fc3-eb5bff98409a".*
+  exit \$RC
+}
+
+cd \$TEMPDIR
+
+tar -xzf /tmp/$INSTALLATION_PACKAGE
+
+# Installing Faust
+echo Installing ARM7 Faust
+cd fs
+\$SUDO cp -r --preserve=mode * / || { echo "Faust installation failed"; RC=1; exit 1; }
+
+# Installing Stratus componets for Faust
+cd ../faust-stratus
+./install.sh || { echo "Faust Stratus component installation failed"; RC=2; exit 1; }
+
+# Installing Python wrapper
+cd ../stratus-python
+\$SUDO ./install.sh || { echo "Python wrapper installation failed"; RC=3; exit 1; }
+
+echo "Testing installation"
+faust --help || { echo "Installation failed"; RC=4; exit 1; }
+
+echo "Running basic interface tests"
+cd ../tests
 faust2stratus tester.dsp -stratusinstall &&
-\$SUDO python3 /root/tester.py "/opt/update/sftp/firmware/effects/2ce39b6c-10fa-11ef-9fc3-eb5bff98409a.so"
-RC=\$?
-\$SUDO rm -f "/opt/firmware/effects/2ce39b6c-10fa-11ef-9fc3-eb5bff98409a".*
-[[ \$RC -eq 0 ]] || { echo "Test execution failed"; exit 1; }
+python3 ./tester.py "/opt/update/sftp/firmware/effects/2ce39b6c-10fa-11ef-9fc3-eb5bff98409a.so" || { echo "Test execution failed"; RC=5; exit 1; }
 
 echo Installation succeeded
-echo You can now use the faustOnStratus command to install your DSP files on the Stratus
+echo You can now use the faust2stratus command to install your DSP files on the Stratus
 echo You can also us the sdk-build-effect command from your computer to drive that process
 ENDSSH

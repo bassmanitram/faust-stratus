@@ -12,7 +12,7 @@
 ARCHFILE=${STRATUS_ARCH:-stratus.cpp}
 STRATUS_EFFECTS_DIR=${STRATUS_EFFECTS_DIR:-/opt/update/sftp/firmware/effects}
 : ${CXX:=g++}
-which "$CXX" && CPPCOMPILE=true
+which "$CXX" > /dev/null && CPPCOMPILE=true
 
 #
 # Supporting various compile platforms - but, obviously, the first is the most important

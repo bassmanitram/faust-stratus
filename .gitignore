@@ -36,3 +36,4 @@ stage/**
 tests/tester.cpp
 srcs/stratus-python/build/**
 srcs/stratus-python/stratus.egg-info/**
+srcs/stratus-python/dist/**
