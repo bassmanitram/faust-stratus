@@ -16,7 +16,7 @@ The Linux-preference has sense, by the way: If you generate CPP from Faust on Li
 Linux libraries. If you _then_ modify the code, it should be still be direct compilable and usable on the Stratus.
 
 ## Installation
-Download the [latest version of the SDK bundle](../../releases/download/v0.4.0/faust-stratus-v0.4.0.zip) to your local computer 
+Download the [latest version of the SDK bundle](../../releases/download/v0.4.1/faust-stratus-v0.4.1.zip) to your local computer 
 (NOT the Stratus pedal) and un-zip it into a folder of your choosing.
 
 You can install this SDK in either of two places - or both!
