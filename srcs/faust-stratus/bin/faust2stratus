@@ -3,16 +3,33 @@
 #####################################################################
 #                                                                   #
 #               Compiles Faust programs for the Chaos Stratus pedal #
-#               (c) Grame, 2017-2020                                #
 #                                                                   #
 #####################################################################
-
-. faustpath
 
 ARCHFILE=${STRATUS_ARCH:-stratus.cpp}
 STRATUS_EFFECTS_DIR=${STRATUS_EFFECTS_DIR:-/opt/update/sftp/firmware/effects}
 : ${CXX:=g++}
 which "$CXX" > /dev/null && CPPCOMPILE=true
+
+. faustpath
+. usage.sh
+
+echoHelp() 
+{
+    usage faust2stratus "[options] [Faust options] <file.dsp>"
+    platform "Chaos Audio Stratus"
+    echo "Compiles Faust programs for the Chaos Audio Stratus pedal"
+    option "-nocppc" "Do not compile the generated CPP source files"
+    option "-stratusinstall" "Installs the effect library on the stratus pedal if the build was performed on the pedal and the DSP file suitably constructed"
+    option "Faust options"
+    exit
+}
+
+if [ "$#" -eq 0 ]; then
+    echo 'Please, provide a Faust file to process !'
+    echo ''
+    echoHelp
+fi
 
 #
 # Supporting various compile platforms - but, obviously, the first is the most important
@@ -41,7 +58,9 @@ STRATUSCLASS=dsp
 while [[ "$1" ]]; do
 	opt=$1
 	shift
-	if [[ "$opt" =~ ^--?"stratusc"$ ]]; then
+    if [[ "$opt" =~ ^--?"help"$ || $opt == "-h" ]]; then
+        echoHelp
+	elif [[ "$opt" =~ ^--?"stratusc"$ ]]; then
 		# Ignore obsolete option
 		true
 	elif [[ "$opt" =~ ^--?"stratusinstall"$ ]]; then
