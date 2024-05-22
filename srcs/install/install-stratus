@@ -94,5 +94,5 @@ python3 ./tester.py "/opt/update/sftp/firmware/effects/2ce39b6c-10fa-11ef-9fc3-e
 
 echo Installation succeeded
 echo You can now use the faust2stratus command to install your DSP files on the Stratus
-echo You can also us the sdk-build-effect command from your computer to drive that process
+echo You can also use the stratus-build-effect command from your computer to drive that process
 ENDSSH
