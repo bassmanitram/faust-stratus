@@ -68,7 +68,7 @@ scp -F "$SSH_CFG" "${DSP}" "$TARGET_USER@$TARGET_ADDRESS:/$TARGET_PATH"
 # Build the effect:
 ssh -F "$SSH_CFG" "$TARGET_USER@$TARGET_ADDRESS:/$TARGET_USER" -T <<ENDSSH
 cd /$TARGET_USER
-export CXXOPTIONS=${CXXOPTIONS:-}
+export CXXFLAGS="${CXXFLAGS:-}"
 faust2stratus "$DSP_FILENAME" "$@" || { echo "Build of $DSP_FILENAME failed"; exit 1; }
 echo Build of $DSP_FILENAME succeeded
 ENDSSH

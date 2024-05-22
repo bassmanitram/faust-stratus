@@ -83,12 +83,12 @@ The `faust2stratus` command has a number of Stratus-specific options that you ca
 Apart from these options, you can add other Faust compiler options to the command line. This may be interesting if you are experimenting
 with different CPP code generation strategies that may better suit your algorithm (e.g. improved vectorization).
 
-Finally, you can affect the CPP compile itself by adding CPP compiler options to the `CXXOPTIONS` environment variable before
+Finally, you can affect the CPP compile itself by adding CPP compiler options to the `CXXFLAGS` environment variable before
 running the command. For example, some users have reported that the following extra CPP optimization options make for faster-running
 algorithms. You would run _this_ command before the build command in order to pick these options up:
 
 ```
-export CXXOPTIONS="-fprefetch-loop-arrays -funroll-loops -funsafe-loop-optimizations -fno-finite-math-only"
+export CXXFLAGS="-fprefetch-loop-arrays -funroll-loops -funsafe-loop-optimizations -fno-finite-math-only"
 ```
 
 ### The `stratus-build-effect` command
