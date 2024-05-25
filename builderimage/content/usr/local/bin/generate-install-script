@@ -1,0 +1,7 @@
+ID=${1:?"First argument must be the effect ID"}
+OUTFILE=${2:?"Second argument must be the target file path"}
+
+echo "export EFFECT_ID=$ID" > "$OUTFILE"
+cat /usr/local/share/stratus/install-script >> "$OUTFILE"
+
+chmod +x "$OUTFILE"

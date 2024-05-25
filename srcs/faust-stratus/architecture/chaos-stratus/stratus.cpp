@@ -53,7 +53,8 @@ typedef unsigned int Uint;
 
 #define NAME_KEY "name"
 #define STRATUS_ID_KEY "stratusId"
-#define VERSION_KEY "version"
+#define OLD_VERSION_KEY "version"
+#define NEW_VERSION_KEY "stratusVersion"
 //using namespace std;
 //
 // Our implementation of the Faust Meta interface
@@ -61,19 +62,24 @@ typedef unsigned int Uint;
 class Meta
 {
     protected:
-    	std::string effectName;
-    	std::string effectId;
-    	std::string version;
+        std::string effectName;
+        std::string effectId;
+        std::string version;
     public:
-    	void declare(const char* key, const char* value) {
-    		if (strcmp(key,NAME_KEY) == 0) {
-    			effectName.assign(value);
-    		} else if (strcmp(key,STRATUS_ID_KEY) == 0) {
-    			effectId.assign(value);
-    		} else if (strcmp(key,VERSION_KEY) == 0) {
-    			version.assign(value);
-    		}
-    	}
+        void declare(const char* key, const char* value) {
+            if (strcmp(key,NAME_KEY) == 0) {
+                effectName.assign(value);
+            } else if (strcmp(key,STRATUS_ID_KEY) == 0) {
+                effectId.assign(value);
+            } else if (strcmp(key,NEW_VERSION_KEY) == 0) {
+                version.assign(value);
+            } else if (strcmp(key,OLD_VERSION_KEY) == 0 && version.empty()) {
+                //
+                // Support original version key. That clashes with Faust's version key
+                //
+                version.assign(value);
+            }
+        }
     friend class STRATUS_CLASS;
     friend class StratusExtensions;
 };
@@ -106,10 +112,10 @@ class UiControlSet {
     // Otherwise, the control is ignored
     //
     void add_control(FAUSTFLOAT* control, int index) {
-    	if (index >= 0 && index < max && controlValues[index] == nullptr) {
-    		controlValues[index] = control;
-    		controlCount++;
-    	}
+        if (index >= 0 && index < max && controlValues[index] == nullptr) {
+            controlValues[index] = control;
+            controlCount++;
+        }
     }
 
     //
@@ -117,7 +123,7 @@ class UiControlSet {
     // is valid
     //
     inline FAUSTFLOAT getValue(Uint i) {
-    	return (i < max && controlValues[i] != nullptr) ? *(controlValues[i]) : 0;
+        return (i < max && controlValues[i] != nullptr) ? *(controlValues[i]) : 0;
     }
 
     //
@@ -125,21 +131,21 @@ class UiControlSet {
     // is valid
     //
     inline void setValue(Uint i, FAUSTFLOAT value) {
-    	if (i < max && controlValues[i] != nullptr) *(controlValues[i]) = value;
+        if (i < max && controlValues[i] != nullptr) *(controlValues[i]) = value;
     }
 
     UiControlSet(Uint cmax) {
-    	max = cmax;
-    	controlValues = new FAUSTFLOAT*[cmax];
-    	for (int i = 0; i < cmax; ++i) {
-    		controlValues[i] = nullptr;
-    	}
+        max = cmax;
+        controlValues = new FAUSTFLOAT*[cmax];
+        for (int i = 0; i < cmax; ++i) {
+            controlValues[i] = nullptr;
+        }
     }
 
     ~UiControlSet() {
-    	delete[] controlValues;
+        delete[] controlValues;
     }
-    	
+        
     friend class UI;
     friend class STRATUS_CLASS;
 };
@@ -149,33 +155,33 @@ class UI {
     FAUSTFLOAT* nextControl = nullptr;
 
     void add_knob(FAUSTFLOAT* slider) {
-    	if (slider == nextControl) {
-    		knobs.add_control(slider, nextIndex);
-    	}
+        if (slider == nextControl) {
+            knobs.add_control(slider, nextIndex);
+        }
     }
 
     void add_switch(FAUSTFLOAT* swtch) {
-    	if (swtch == nextControl) {
-    		switches.add_control(swtch, nextIndex);
-    	}
+        if (swtch == nextControl) {
+            switches.add_control(swtch, nextIndex);
+        }
     }
 
     void reset_declare_state() {
-    	nextIndex = -1;
-    	nextControl = nullptr;
+        nextIndex = -1;
+        nextControl = nullptr;
     }
 
     protected:
-    	UiControlSet knobs = UiControlSet(MAXKNOBS);
-    	UiControlSet switches = UiControlSet(MAXSWITCHES);
+        UiControlSet knobs = UiControlSet(MAXKNOBS);
+        UiControlSet switches = UiControlSet(MAXSWITCHES);
 
-    	Uint getKnobCount() {
-    		return knobs.controlCount;
-    	}
+        Uint getKnobCount() {
+            return knobs.controlCount;
+        }
 
-    	Uint getSwitchCount() {
-    		return switches.controlCount;
-    	}
+        Uint getSwitchCount() {
+            return switches.controlCount;
+        }
 
     public:
         void openTabBox(const char* label) {};
@@ -185,46 +191,46 @@ class UI {
         void addSoundfile(const char* label, const char* filename, void** sf_zone) {};
 
         void addButton(const char* label, FAUSTFLOAT* zone) {
-    		add_switch(zone);
-    		reset_declare_state();
-    	};
+            add_switch(zone);
+            reset_declare_state();
+        };
         void addCheckButton(const char* label, FAUSTFLOAT* zone) {
-    		add_switch(zone);
-    		reset_declare_state();
-    	};
+            add_switch(zone);
+            reset_declare_state();
+        };
         void addVerticalSlider(const char* label, FAUSTFLOAT* zone, FAUSTFLOAT init, FAUSTFLOAT min, FAUSTFLOAT max, FAUSTFLOAT step) {
-    		add_knob(zone);
-    		reset_declare_state();
-    	};
+            add_knob(zone);
+            reset_declare_state();
+        };
         void addHorizontalSlider(const char* label, FAUSTFLOAT* zone, FAUSTFLOAT init, FAUSTFLOAT min, FAUSTFLOAT max, FAUSTFLOAT step) {
-    		add_knob(zone);
-    		reset_declare_state();
-    	};
+            add_knob(zone);
+            reset_declare_state();
+        };
         void addNumEntry(const char* label, FAUSTFLOAT* zone, FAUSTFLOAT init, FAUSTFLOAT min, FAUSTFLOAT max, FAUSTFLOAT step) {
-    		FAUSTFLOAT steps = (max - min)/step;
-    		if (min == 0 && (max == 1 || max == 2) && step == 1) {
-    			add_switch(zone);
-    		}
-    		reset_declare_state();
-    	};
+            FAUSTFLOAT steps = (max - min)/step;
+            if (min == 0 && (max == 1 || max == 2) && step == 1) {
+                add_switch(zone);
+            }
+            reset_declare_state();
+        };
         void addHorizontalBargraph(const char* label, FAUSTFLOAT* zone, FAUSTFLOAT min, FAUSTFLOAT max) {
-    		reset_declare_state();
-    	};
+            reset_declare_state();
+        };
         void addVerticalBargraph(const char* label, FAUSTFLOAT* zone, FAUSTFLOAT min, FAUSTFLOAT max) {
-    		reset_declare_state();
-    	};
+            reset_declare_state();
+        };
 
-    	//
-    	// The "declare" state machine!
-    	//
-    	// We look for the "stratus" key and a single decimal digit as the value
-    	//
+        //
+        // The "declare" state machine!
+        //
+        // We look for the "stratus" key and a single decimal digit as the value
+        //
         void declare(FAUSTFLOAT* control, const char* key, const char* val) {
-    		if (control != nullptr && strcmp("stratus",key) == 0 && strlen(val) == 1 && val[0] >= '0' && val[0] <= '9') {
-    			nextControl = control;
-    			nextIndex = val[0] - '0';
-    		} 
-    	}
+            if (control != nullptr && strcmp("stratus",key) == 0 && strlen(val) == 1 && val[0] >= '0' && val[0] <= '9') {
+                nextControl = control;
+                nextIndex = val[0] - '0';
+            } 
+        }
 
     friend class STRATUS_CLASS;
     friend class StratusExtensions;
@@ -264,90 +270,90 @@ class STRATUS_CLASS
     int fSampleRate = 44100;
     enum SWITCH_STATE
     {
-    	UP = 0,
-    	DOWN = 1,
-    	MIDDLE = 2
+        UP = 0,
+        DOWN = 1,
+        MIDDLE = 2
     };
 
     // Use for switch debugging
     void getTextForEnum(SWITCH_STATE enumVal, std::string *out) {
-    	switch (enumVal) {
-    		case 0:  *out = "UP";
-    		case 1:  *out = "DOWN";
-    		case 2:  *out = "MIDDLE";
-    		default: *out = "BAD";
-    	}
-    	return;
+        switch (enumVal) {
+            case 0:  *out = "UP";
+            case 1:  *out = "DOWN";
+            case 2:  *out = "MIDDLE";
+            default: *out = "BAD";
+        }
+        return;
     }
 
     SWITCH_STATE stompSwitch = DOWN;
     FAUSTCLASS faust;
 
     protected:
-    	UI faustUi;
-    	Meta faustMeta;
+        UI faustUi;
+        Meta faustMeta;
 
-    	static SWITCH_STATE switchStateFromValue(int value) {
-    		switch (value) {
-    			case 0: return SWITCH_STATE::UP;
-    			case 1: return SWITCH_STATE::DOWN;
-    			case 2: return SWITCH_STATE::MIDDLE;
-    			default: return SWITCH_STATE::DOWN;
-    		}
-    	}
+        static SWITCH_STATE switchStateFromValue(int value) {
+            switch (value) {
+                case 0: return SWITCH_STATE::UP;
+                case 1: return SWITCH_STATE::DOWN;
+                case 2: return SWITCH_STATE::MIDDLE;
+                default: return SWITCH_STATE::DOWN;
+            }
+        }
 
     public:
-    	STRATUS_CLASS()
-    	{
-    		faust.init(fSampleRate);
-    		faust.metadata(&faustMeta);
-    		faust.buildUserInterface(&faustUi);
-    	}
-    	~STRATUS_CLASS() {}
+        STRATUS_CLASS()
+        {
+            faust.init(fSampleRate);
+            faust.metadata(&faustMeta);
+            faust.buildUserInterface(&faustUi);
+        }
+        ~STRATUS_CLASS() {}
 
-    	STRATUS_API void setKnob(int num, float knobVal)
-    	{
-    		faustUi.knobs.setValue(num, knobVal);
-    	}
+        STRATUS_API void setKnob(int num, float knobVal)
+        {
+            faustUi.knobs.setValue(num, knobVal);
+        }
 
-    	STRATUS_API float getKnob(int in)
-    	{
-    		return faustUi.knobs.getValue(in);
-    	}
+        STRATUS_API float getKnob(int in)
+        {
+            return faustUi.knobs.getValue(in);
+        }
 
-    	STRATUS_API void setSwitch(int num, SWITCH_STATE switchVal)
-    	{
-    		faustUi.switches.setValue(num, switchVal);
-    	}
+        STRATUS_API void setSwitch(int num, SWITCH_STATE switchVal)
+        {
+            faustUi.switches.setValue(num, switchVal);
+        }
 
-    	STRATUS_API SWITCH_STATE getSwitch(int in)
-    	{
-    		Uint switchVal = faustUi.switches.getValue(in);
-    		return switchStateFromValue(switchVal < 3 ? switchVal : 0);
-    	}
+        STRATUS_API SWITCH_STATE getSwitch(int in)
+        {
+            Uint switchVal = faustUi.switches.getValue(in);
+            return switchStateFromValue(switchVal < 3 ? switchVal : 0);
+        }
 
-    	STRATUS_API void setStompSwitch(SWITCH_STATE switchVal)
-    	{
-    		stompSwitch = switchVal;
-    	}
+        STRATUS_API void setStompSwitch(SWITCH_STATE switchVal)
+        {
+            stompSwitch = switchVal;
+        }
 
-    	STRATUS_API bool getStompSwitch()
-    	{
-    		return stompSwitch;
-    	}
+        STRATUS_API bool getStompSwitch()
+        {
+            return stompSwitch;
+        }
 
-    	STRATUS_API void stompSwitchPressed(int count, FAUSTFLOAT *inputs, FAUSTFLOAT *outputs)
-    	{
-    		if (stompSwitch)
-    		{
-    			compute(count, inputs, outputs);
-    		}
-    		return;
-    	}
+        STRATUS_API void stompSwitchPressed(int count, FAUSTFLOAT *inputs, FAUSTFLOAT *outputs)
+        {
+            if (stompSwitch)
+            {
+                compute(count, inputs, outputs);
+            }
+            return;
+        }
 
-    	STRATUS_API void compute(int count, FAUSTFLOAT *inputs, FAUSTFLOAT *outputs) {
-    		faust.compute(count,&inputs,&outputs);
-    	}
+        STRATUS_API void compute(int count, FAUSTFLOAT *inputs, FAUSTFLOAT *outputs) {
+            faust.compute(count,&inputs,&outputs);
+        }
 
     friend class StratusExtensions;
 
@@ -374,7 +380,7 @@ class StratusExtensions {
         return effect->faustMeta.effectName.c_str();
     }
 
-    	STRATUS_API const char* getEffectId()
+        STRATUS_API const char* getEffectId()
     {
         return effect->faustMeta.effectId.c_str();
     }
