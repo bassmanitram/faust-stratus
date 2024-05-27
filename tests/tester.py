@@ -1,5 +1,5 @@
-import sys, stratus
-from stratus import Effect
+import sys
+from chaos_stratus import Effect
 from ctypes import *
 
 effect = Effect(sys.argv[1])

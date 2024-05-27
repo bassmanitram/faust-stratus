@@ -1,0 +1,22 @@
+##
+## This script installs the Startus-related Faust files into a pre-existing 
+## Faust installation.
+##
+## Therefore you must already have installed Faust for this script to work.
+##
+## Use this script to install these components on your computer.
+## Use the install-sdk script to install onto the Stratus itself
+##
+## During this installation, your Stratus will not be touched. You can
+## leave it completely unconnected. If you accidentally left it at your
+## last gig, or in the band rehearsal space, this script doesn't care!
+##
+set -eu
+cd $(realpath $(dirname $0))
+./faust-stratus/install.sh
+./stratus-python/install.sh
+rm -rf ./tests/tester.so ./tests/tester.cpp
+faust2stratus ./tests/tester.dsp
+python3 ./tests/tester.py ./tests/tester.so
+
+echo Installation succeeded

@@ -16,19 +16,21 @@ jobs:
 #         with:
 #           username: ${{ secrets.DOCKER_USERNAME }}
 #           password: ${{ secrets.DOCKER_PASSWORD }}
+#
+#      - name: Build Docker image
+#        run: docker build -f Dockerfile.stratus-builder -t bassmanitram/chaos-stratus-effect-build .
 
-      - name: Build Docker image
-        run: docker build -t faust:stratus .
+      - name: Make script executable (optional)
+        run: chmod +x ci/scripts/stage-toolkit.sh 
 
-      - name: Extract file
-        run: |
-          docker run -v "/tmp:/tmp" --rm faust:stratus sh -c "cp /root/faust-stratus.zip /tmp/faust-stratus.zip"
+      - name: Build toolkit installer
+        run: ci/scripts/stage-toolkit.sh
 
       - name: Upload extracted file as artifact
         uses: actions/upload-artifact@v2
         with:
           name: installation package
-          path: /tmp/faust-stratus.zip
+          path: faust-stratus.zip
 
 #      - uses: actions/create-release@v1
 #        with:
@@ -37,4 +39,4 @@ jobs:
 #          body: "Built and released from commit ${{ github.sha }}"
 #          draft: true  # Set to true for draft releases
 #          prerelease: false  # Set to true for pre-releases
-#          file_glob: artifacts/faust-stratus.tgz
+#          file_glob: artifacts/faust-stratus.zip
