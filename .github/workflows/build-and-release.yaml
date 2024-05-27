@@ -27,7 +27,7 @@ jobs:
         run: ci/scripts/stage-toolkit.sh
 
       - name: Upload extracted file as artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: faust-stratus
           path: build/*
