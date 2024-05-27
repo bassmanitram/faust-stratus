@@ -17,8 +17,10 @@ FAUST_ARCH_DIR=${FAUST_ARCH_DIR:-$(faust --archdir)}
 echo "Installing Faust components to support the Chaos Stratus"
 
 if [ -w "$FAUST_ARCH_DIR" ]; then
+	rm -f "$FAUST_ARCH_DIR/stratus.cpp"
 	cp -a ./architecture/* "$FAUST_ARCH_DIR"
 else
+	sudo rm -f "$FAUST_ARCH_DIR/stratus.cpp"
 	sudo cp -a ./architecture/* "$FAUST_ARCH_DIR"
 fi
 

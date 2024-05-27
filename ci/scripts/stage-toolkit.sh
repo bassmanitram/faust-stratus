@@ -9,6 +9,7 @@ WORKDIR=$(mktemp -d)
 ##
 for sig in SIGTERM ERR EXIT; do trap "_term ${sig}" ${sig}; done
 _term() {
+  ${OLDDIR}
   trap "" SIGTERM ERR EXIT
   rm -rf ${WORKDIR}
 }
@@ -19,5 +20,4 @@ cp -pr $OLDDIR/srcs/faust-stratus .
 cp -pr $OLDDIR//tests .
 cp -pr $OLDDIR/srcs/install/* .
 
-cd ${OLDDIR}
-zip -r faust-stratus.zip ${WORKDIR}/*
+zip -r ${OLDDIR}/faust-stratus.zip ./*
