@@ -29,8 +29,8 @@ jobs:
       - name: Upload extracted file as artifact
         uses: actions/upload-artifact@v2
         with:
-          name: installation package
-          path: faust-stratus.zip
+          name: faust-stratus
+          path: build/*
 
 #      - uses: actions/create-release@v1
 #        with:
