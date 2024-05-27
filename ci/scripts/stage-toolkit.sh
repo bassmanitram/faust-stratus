@@ -14,10 +14,10 @@ _term() {
 }
 
 cd ${WORKDIR}
-cp -p $OLDDIR/srcs/stratus-python .
-cp -p $OLDDIR/srcs/faust-stratus .
-cp -p $OLDDIR//tests .
-cp -p $OLDDIR/srcs/install/* .
+cp -pr $OLDDIR/srcs/stratus-python .
+cp -pr $OLDDIR/srcs/faust-stratus .
+cp -pr $OLDDIR//tests .
+cp -pr $OLDDIR/srcs/install/* .
 
 cd ${OLDDIR}
 zip -r faust-stratus.zip ${WORKDIR}/*
